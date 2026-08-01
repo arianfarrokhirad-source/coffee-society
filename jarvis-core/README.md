@@ -12,7 +12,8 @@ without PRIME's sign-off.
 ## What works today
 
 - Supabase schema (30 tables), migrations, seed for businesses A00–A08 and 10 agents
-- Supabase Auth (email/password) + secure one-time **Claim PRIME** setup (no hard-coded emails)
+- Supabase Auth (email/password) + one-time **setup-token PRIME bootstrap**
+  (server-only token, single-use nonce, atomic claim + audit; no hard-coded emails)
 - Row Level Security on every table, with an SQL verification suite
 - Authority model L0–L5, roles, deny-by-default action policy
 - Objectives, projects, tasks (+dependencies), decisions, notifications (P0–P3, in-app)
@@ -61,8 +62,11 @@ Database: create a Supabase project, then run `supabase/migrations/0001…0008` 
 order followed by `supabase/seed/seed.sql` (SQL editor or `psql`). Details:
 [docs/setup/supabase.md](docs/setup/supabase.md).
 
-First login: create an account at `/login`, then click **Claim PRIME** on the
-Executive page. This works exactly once.
+First login: set `JARVIS_PRIME_SETUP_TOKEN` (min 32 chars,
+`openssl rand -base64 32`), create an account at `/login`, then enter the token
+under **Claim PRIME** on the Executive page. This works exactly once; remove or
+rotate the token afterwards. Full deployment order:
+[docs/setup/supabase.md](docs/setup/supabase.md).
 
 ## Environment variables
 

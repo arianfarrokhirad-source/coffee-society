@@ -22,7 +22,8 @@ begin
     'task_dependencies','decisions','approvals','notifications','documents',
     'document_versions','agent_runs','agent_messages','tool_calls','model_usage',
     'audit_logs','daily_briefs','system_events',
-    'leads','clients','website_audits','proposals','website_projects','maintenance_plans'
+    'leads','clients','website_audits','proposals','website_projects','maintenance_plans',
+    'prime_claim_nonces'
   ]
   loop
     if not exists (
@@ -36,7 +37,7 @@ begin
   if array_length(missing, 1) > 0 then
     raise exception 'RLS NOT ENABLED on: %', array_to_string(missing, ', ');
   end if;
-  raise notice 'PASS: RLS enabled on all % exposed tables', 30;
+  raise notice 'PASS: RLS enabled on all % exposed tables', 31;
 end $$;
 
 -- 2. No "allow all authenticated" development policies (qual = true).
@@ -62,7 +63,8 @@ declare
 begin
   foreach t in array array[
     'agent_runs','agent_messages','tool_calls','model_usage','audit_logs',
-    'daily_briefs','system_events','roles','permissions','role_permissions'
+    'daily_briefs','system_events','roles','permissions','role_permissions',
+    'prime_claim_nonces'
   ]
   loop
     if exists (

@@ -48,16 +48,50 @@ failure; the final row should read `RLS VERIFICATION COMPLETE`.
 - If "Confirm email" is ON, confirm the first account before signing in;
   the login page notes this.
 
-## 7. Assign PRIME (secure, no hard-coded emails)
+## 7. Assign PRIME (setup-token bootstrap)
 
-Sign up in the app, then click **Claim PRIME** on the Executive page. This
-calls the `claim_prime()` database function, which:
+**Safe deployment order — follow it exactly:**
 
-- requires an authenticated session,
-- takes an advisory lock (no race between two claimants),
-- assigns org-wide `prime` membership at authority L5 **only if no PRIME exists**,
-- writes a `prime.claimed` audit record,
-- refuses forever after.
+1. **Deploy privately** (no public link shared; ideally before DNS is announced).
+2. **Configure the setup token** as a server-only env var:
+   ```bash
+   openssl rand -base64 32   # generate real entropy — do not hand-write a phrase
+   ```
+   Set the result as `JARVIS_PRIME_SETUP_TOKEN` (min 32 chars). Until this is
+   set, claiming PRIME is **disabled entirely** — nobody can become PRIME.
+3. **Create the founder account** at `/login`.
+4. **Claim PRIME**: on `/executive`, enter the setup token and submit.
+5. **Remove or rotate the token** in your hosting env and redeploy. (Claiming
+   is already impossible once PRIME exists; removing it eliminates the secret.)
+6. **Restrict signups** (Supabase → Authentication → Settings) so no further
+   accounts can be created without your involvement.
+
+### How it works
+
+The raw token is validated **in the server action**, never in PostgreSQL:
+constant-time comparison against the env var. On success the server mints a
+single-use, user-bound nonce valid for two minutes (only its SHA-256 hash is
+stored) and calls `claim_prime_with_nonce()`, a `service_role`-only RPC that in
+one transaction:
+
+- takes the reserved advisory lock `(742617, 1)` — no race between claimants,
+- locks and validates the nonce (unexpired, unconsumed, bound to this user),
+- derives the claimant identity **from the nonce row**,
+- verifies no active PRIME exists,
+- consumes the nonce, inserts the org-wide `prime` membership at L5, and writes
+  the `prime.claimed` audit row — all-or-nothing.
+
+A `memberships` constraint trigger independently rejects a second active PRIME
+membership, so even a future code path cannot create two.
+
+Failed attempts are audited as `prime.claim_denied` and rate limited (5 per 15
+minutes per account, counted from audit rows). The browser always receives one
+generic error — it never learns whether the token was wrong, claiming was
+disabled, or the attempt was rate limited.
+
+The legacy first-user-wins `claim_prime()` function is **dropped**. There is no
+downgrade path that restores it; a rollback needs a secure replacement, not the
+old function.
 
 ## 8. Storage (documents, optional in Phase 1)
 
