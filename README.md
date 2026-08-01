@@ -21,7 +21,7 @@ Built with Next.js 15, Supabase, and Vercel. Dark aesthetic. No LLM yet — you 
 You already have an account. Do this:
 
 1. Go to https://supabase.com/dashboard → **New project**
-2. Name: `coffee-society`. Region: closest to Cyprus (e.g. `eu-central-1`)
+2. Name: `farrokhirad`. Region: closest to Cyprus (e.g. `eu-central-1`)
 3. Set a strong DB password (save it — you won't need it for the code, but keep it)
 4. Wait 1-2 min for provisioning
 5. Go to **SQL Editor** → paste all of `migrations/migration1.sql` → **Run**
@@ -79,7 +79,7 @@ git push -u origin main
 ## 4. Deploy to Vercel (10 min)
 
 1. Go to https://vercel.com/new
-2. **Import** your `coffee-society` GitHub repo
+2. **Import** the GitHub repo, and set the Vercel **project name** to `Farrokhirad`
 3. Framework preset: **Next.js** (auto-detected)
 4. Before clicking Deploy, expand **Environment Variables** and add all four:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -87,7 +87,7 @@ git push -u origin main
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `ADMIN_PASSWORD`
 5. Click **Deploy**
-6. Wait ~1-2 min. When done, you'll get a URL like `coffee-society-xxx.vercel.app`
+6. Wait ~1-2 min. When done, you'll get a URL like `farrokhirad-xxx.vercel.app`
 
 Test the live site the same way you tested locally.
 

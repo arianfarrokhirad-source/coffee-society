@@ -1,10 +1,42 @@
 # Vercel deployment
 
+## Naming convention
+
+- **Farrokhirad** — the company/product name. Use it for the Vercel project,
+  deployment URLs, domains and anything customer- or operator-facing.
+- **JARVIS** — the internal operating system (Kernel, AI runtime, agents,
+  packages, database objects). Internal names are **not** rebranded: package
+  names stay `@jarvis/*`, env vars stay `JARVIS_*`, agent codes stay `JVS-00`,
+  `A00-GM`, etc.
+
+Rule of thumb: if a human outside engineering reads it, it says Farrokhirad;
+if it is code, config keys or architecture, it says JARVIS.
+
 ## Project settings
 
+- **Project name**: `Farrokhirad`
 - **Root Directory**: `jarvis-core/apps/command-center`
 - Framework preset: Next.js (auto-detected)
 - Node.js 20+
+
+The Vercel project name is stored in Vercel's project settings, not in the
+repository — the `name` field in `vercel.json` was deprecated and removed by
+Vercel, so there is no config file in this repo that sets it. Renaming is a
+dashboard action (see below).
+
+## Renaming an existing Vercel project
+
+1. Vercel → the project → **Settings → General → Project Name** → `Farrokhirad` → Save.
+2. Deployment URLs change from `<old-name>-*.vercel.app` to
+   `farrokhirad-*.vercel.app`. Vercel keeps the previous production alias
+   working, but **preview URLs generated before the rename are not renamed** —
+   update any bookmarks, webhook targets or docs that pinned an old URL.
+3. If a custom domain is attached it is unaffected.
+4. Environment variables, the connected Git repository and build settings are
+   preserved by a rename — no redeploy is required for the rename itself,
+   though the next push will build under the new name.
+5. The GitHub repository name is independent of the Vercel project name.
+   Renaming the repo is optional and, if done, requires updating git remotes.
 
 Because the app lives in an npm workspace, Vercel must install from the
 monorepo root — it detects this automatically when the root directory is set

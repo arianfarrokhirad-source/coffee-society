@@ -1,5 +1,11 @@
 # JARVIS — Private Multi-Business AI Operating System
 
+> **Naming:** **Farrokhirad** is the company/product name — it appears on the
+> Vercel project, deployment URLs and domains. **JARVIS** is the internal
+> operating system that powers it: the Kernel, AI runtime, agents, packages
+> (`@jarvis/*`), environment variables (`JARVIS_*`) and database objects keep
+> their JARVIS names and are not rebranded.
+
 JARVIS is a private command centre for one founder (**PRIME**) running multiple
 businesses (A00 ATLAS … A08 VOID) from a single interface: structured company
 data in Supabase, an AI orchestrator (JVS-00) that routes requests to
@@ -91,8 +97,8 @@ raises on failure. For a local PostgreSQL dry-run, apply
 
 ## Deployment
 
-Vercel: root directory `jarvis-core/apps/command-center`, plus the environment
-variables above. Wire `POST /api/cron/daily-brief` (Bearer `JARVIS_CRON_SECRET`)
+Vercel: project name `Farrokhirad`, root directory
+`jarvis-core/apps/command-center`, plus the environment variables above. Wire `POST /api/cron/daily-brief` (Bearer `JARVIS_CRON_SECRET`)
 to Vercel Cron for scheduled briefs. Details: [docs/setup/vercel.md](docs/setup/vercel.md).
 
 ## Documentation
