@@ -103,6 +103,10 @@ to Vercel Cron for scheduled briefs. Details: [docs/setup/vercel.md](docs/setup/
 
 ## Documentation
 
+**Working on the code?** Start with the JARVIS Engineering Knowledge System:
+[`docs/codebase/CURRENT_STATE.md`](docs/codebase/CURRENT_STATE.md), then the
+relevant [`docs/codebase/context/`](docs/codebase/) packet.
+
 | Area         | Docs                                                                                                                                                                                                                                              |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Setup        | [local-development](docs/setup/local-development.md) · [supabase](docs/setup/supabase.md) · [vercel](docs/setup/vercel.md)                                                                                                                        |

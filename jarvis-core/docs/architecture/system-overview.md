@@ -1,5 +1,10 @@
 # System overview
 
+> **Superseded.** The living architecture map is
+> [`../codebase/SYSTEM_MAP.md`](../codebase/SYSTEM_MAP.md) (JEKS), which is
+> kernel-centric and records current coupling honestly. This file is kept
+> until JEKS Slice 3 completes the absorption; prefer the JEKS version.
+
 ## Architecture
 
 ```
