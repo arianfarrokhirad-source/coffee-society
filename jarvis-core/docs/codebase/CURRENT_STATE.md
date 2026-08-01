@@ -7,7 +7,7 @@ Owner: PRIME
 
 # Current state
 
-**Read this first, every session.** Last updated: 2026-08-01, commit `65ca4d0`.
+**Read this first, every session.** Last updated: 2026-08-01, JEKS slice 2.
 
 ## Where we are
 
@@ -17,7 +17,7 @@ Owner: PRIME
 | **Phase**                 | Phase 1.1 — Foundation Hardening                                   |
 | **Active branch**         | `claude/jarvis-phase-1-1-hardening` (PR #3)                        |
 | **Frozen baseline**       | `b4cd2f1` — tag `jarvis-phase-1-audit` (local; remote tag pending) |
-| **Last commit**           | `65ca4d0` — `chore(branding)`: Vercel project named Farrokhirad    |
+| **Last commit**           | JEKS slice 2 — manifest, generator, verifier                       |
 | **Last hardening commit** | `1cf3741` — commit 1/16: setup-token PRIME bootstrap               |
 | **CI**                    | green on PR #1 (frozen baseline) and PR #3 (active)                |
 | **Deployed**              | no — never run against a live Supabase project                     |
@@ -26,8 +26,8 @@ Owner: PRIME
 
 - **Phase 1.1 commit 2 — fail-closed critical auditing.** Design not yet
   submitted; requires PRIME approval of the technical design before code.
-- **JEKS Slice 2** — manifest schema, generator, verifier, generated catalogs,
-  npm scripts. (Slice 1 complete.)
+- Nothing else. JEKS Slices 1 and 2 are complete; the Vercel project rename to
+  `Farrokhirad` is done and deploying green.
 
 ## Work currently prohibited
 
@@ -56,22 +56,16 @@ are not batched. Sequence: 1 ✅ · 2 auth-audit · 3 scope FKs · 4 RLS perf ·
 
 ## Known blockers
 
-| Blocker                                      | Owner             | Impact                                                      |
-| -------------------------------------------- | ----------------- | ----------------------------------------------------------- |
-| Vercel project rename to `Farrokhirad`       | PRIME (dashboard) | cosmetic; repo side done                                    |
-| Remote git tag `jarvis-phase-1-audit`        | PRIME             | this environment's credentials refuse tag pushes (HTTP 403) |
-| No live Supabase project                     | PRIME             | RLS/Storage/auth verified only on local PG16 + harness      |
-| No Docker / Supabase CLI in this environment | environment       | Playwright E2E cannot be fully executed here                |
+| Blocker                                      | Owner       | Impact                                                      |
+| -------------------------------------------- | ----------- | ----------------------------------------------------------- |
+| Remote git tag `jarvis-phase-1-audit`        | PRIME       | this environment's credentials refuse tag pushes (HTTP 403) |
+| No live Supabase project                     | PRIME       | RLS/Storage/auth verified only on local PG16 + harness      |
+| No Docker / Supabase CLI in this environment | environment | Playwright E2E cannot be fully executed here                |
 
 ## Required next approval
 
-1. Review of JEKS Slice 1 (this system) → then Slice 2.
+1. Review of JEKS Slice 2 → then hardening resumes.
 2. Technical design for hardening commit 2 → then implementation.
-
-Open question carried forward: should `ARCHITECTURE_EVOLUTION.md` move from
-Slice 3 into Slice 2? Its content (current choice → replacement trigger →
-candidate → migration cost) is stable today and it is the main defence against
-"temporary" becoming permanent.
 
 ## Validation commands
 
@@ -83,7 +77,9 @@ npm ci && npm run lint && npm run typecheck && npm run test && npm run build
 #   → supabase/tests/rls_verification.sql
 #   → supabase/tests/prime_bootstrap_verification.sql
 #   → supabase/tests/race_prime_claim.sh
+npm run codebase:generate && npm run codebase:verify   # advisory until slice 3
 ```
 
 Current results: 116/116 unit tests · lint clean · typecheck clean · build
-clean · RLS 8/8 · PRIME bootstrap 12/12 · race test pass.
+clean · RLS 8/8 · PRIME bootstrap 12/12 · race test pass · codebase:verify
+all checks passed.

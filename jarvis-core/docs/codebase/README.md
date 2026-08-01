@@ -54,18 +54,19 @@ changing code. It is what keeps a session inside its approved scope.
 
 ## Document index
 
-| Document                                                                                                           | Type      | Canonical for                                   |
-| ------------------------------------------------------------------------------------------------------------------ | --------- | ----------------------------------------------- |
-| `CURRENT_STATE.md`                                                                                                 | manual    | **yes** — project state, approvals, blockers    |
-| `SYSTEM_MAP.md`                                                                                                    | manual    | no — explains the kernel and boundaries         |
-| `GLOSSARY.md`                                                                                                      | manual    | no — term lookup                                |
-| `context/*_CONTEXT.md`                                                                                             | manual    | no — per-domain working knowledge               |
-| `context/TASK_TEMPLATE.md`                                                                                         | manual    | no — scope discipline                           |
-| `MANIFEST.json`                                                                                                    | generated | no — navigation metadata _(Slice 2)_            |
-| `CATALOG.generated.md`                                                                                             | generated | no — modules, routes, tools, graphs _(Slice 2)_ |
-| `decisions/ADR-*.md`                                                                                               | manual    | **yes** — decision history _(Slice 3)_          |
-| `ARCHITECTURE_EVOLUTION.md`                                                                                        | manual    | no — temporary choices + triggers _(pending)_   |
-| `SECURITY_MAP.md`, `DATABASE_MAP.md`, `AI_RUNTIME_MAP.md`, `EVENT_CATALOG.generated.md`, `DEVELOPMENT_PLAYBOOK.md` | mixed     | _(Slice 3)_                                     |
+| Document                                                                                                           | Type      | Canonical for                                      |
+| ------------------------------------------------------------------------------------------------------------------ | --------- | -------------------------------------------------- |
+| `CURRENT_STATE.md`                                                                                                 | manual    | **yes** — project state, approvals, blockers       |
+| `SYSTEM_MAP.md`                                                                                                    | manual    | no — explains the kernel and boundaries            |
+| `GLOSSARY.md`                                                                                                      | manual    | no — term lookup                                   |
+| `context/*_CONTEXT.md`                                                                                             | manual    | no — per-domain working knowledge                  |
+| `context/TASK_TEMPLATE.md`                                                                                         | manual    | no — scope discipline                              |
+| `ENGINEERING_PRINCIPLES.md`                                                                                        | manual    | **yes** — engineering philosophy                   |
+| `ARCHITECTURE_EVOLUTION.md`                                                                                        | manual    | **yes** — temporary choices + replacement triggers |
+| `MANIFEST.json`                                                                                                    | generated | no — navigation metadata                           |
+| `CATALOG.generated.md`                                                                                             | generated | no — modules, routes, tools, dependency graph      |
+| `decisions/ADR-*.md`                                                                                               | manual    | **yes** — decision history _(Slice 3)_             |
+| `SECURITY_MAP.md`, `DATABASE_MAP.md`, `AI_RUNTIME_MAP.md`, `EVENT_CATALOG.generated.md`, `DEVELOPMENT_PLAYBOOK.md` | mixed     | _(Slice 3)_                                        |
 
 ## Update contract
 
@@ -81,11 +82,28 @@ when to update it. Rules:
 - **Never describe desired architecture as if it exists.** Current reality
   first; intended direction explicitly labelled as such.
 
-## Verification
+## Tooling
 
-`npm run codebase:verify` (Slice 2) checks paths, staleness, budgets and
-forbidden dependency edges. It runs in **advisory mode** until Slice 3 is
-accepted, then joins the blocking `npm run validate` gate.
+```bash
+npm run codebase:generate   # rewrite MANIFEST.json + CATALOG.generated.md
+npm run codebase:verify     # advisory checks (--strict to exit non-zero)
+```
+
+`verify` checks: referenced paths exist · security-critical files have required
+tests · generated files are not stale · security-shaped files are all
+classified · module dependencies obey `layerRules` · business/agent codes match
+between the seed and TypeScript constants · doc links resolve · context packets
+are within budget · no secret-shaped strings · every `ARCHITECTURE_EVOLUTION`
+row has all six cells · `CURRENT_STATE` commit references are real.
+
+It verifies **structure, not truth**: green means paths resolve and generated
+content is fresh, not that the prose is accurate. Advisory until Slice 3 is
+accepted, then `--strict` becomes the default and it joins `npm run validate`.
+
+Tools live in `tools/codebase/` and run on Node's native TypeScript support —
+no build step and no added dependency. Human judgement lives in
+`tools/codebase/annotations.json`; the generator merges it and never
+overwrites it.
 
 ## Related documentation (not part of JEKS)
 

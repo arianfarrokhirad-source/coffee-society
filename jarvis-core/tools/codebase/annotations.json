@@ -1,0 +1,252 @@
+{
+  "_comment": "MANUAL. Human judgement merged into the generated MANIFEST.json. The generator never overwrites this file. See docs/codebase/README.md.",
+  "modules": {
+    "@jarvis/shared": {
+      "purpose": "Business/agent codes, authority levels, Zod output schemas, Result type.",
+      "securitySensitivity": "sensitive",
+      "stability": "changing"
+    },
+    "@jarvis/permissions": {
+      "purpose": "Authority comparison, deny-by-default action policy, agent scope enforcement. Pure, I/O-free.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    "@jarvis/security": {
+      "purpose": "Secret redaction, audit event construction, rate limiting, safe errors, constant-time comparison, webhook verification.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    "@jarvis/database": {
+      "purpose": "Typed rows, client factories, JarvisStore seam with Supabase and in-memory implementations.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    "@jarvis/ai": {
+      "purpose": "Provider-independent capability router, Anthropic/OpenAI adapters, structured output validation.",
+      "securitySensitivity": "sensitive",
+      "stability": "changing"
+    },
+    "@jarvis/agents": {
+      "purpose": "Master constitution, versioned agent role cards, composable prompt assembly.",
+      "securitySensitivity": "sensitive",
+      "stability": "stable"
+    },
+    "@jarvis/workflows": {
+      "purpose": "Request classifier, internal tool pipeline with enforcement, JVS-00 orchestrator.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    "@jarvis/reporting": {
+      "purpose": "Daily PRIME brief composition and notification delivery adapters.",
+      "securitySensitivity": "ordinary",
+      "stability": "stable"
+    },
+    "@jarvis/integrations": {
+      "purpose": "External adapter contract and seven disabled placeholder adapters.",
+      "securitySensitivity": "sensitive",
+      "stability": "stable"
+    },
+    "@jarvis/ui": {
+      "purpose": "Server-component-safe UI primitives: Card, Badge, EmptyState, StatTile.",
+      "securitySensitivity": "ordinary",
+      "stability": "temporary"
+    },
+    "@jarvis/command-center": {
+      "purpose": "Next.js App Router Command Centre: pages, server actions, API routes, auth middleware.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    }
+  },
+  "securityCriticalFiles": [
+    {
+      "path": "packages/permissions/src/policy.ts",
+      "class": "critical",
+      "concern": "Action policy and approval gating; unknown actions must fail closed.",
+      "requiredTests": ["packages/permissions/tests/policy.test.ts"]
+    },
+    {
+      "path": "packages/permissions/src/authority.ts",
+      "class": "critical",
+      "concern": "L0-L5 authority comparison.",
+      "requiredTests": ["packages/permissions/tests/authority.test.ts"]
+    },
+    {
+      "path": "packages/permissions/src/agent-scope.ts",
+      "class": "critical",
+      "concern": "Agent containment: business scope, allowlist, denylist.",
+      "requiredTests": ["packages/permissions/tests/agent-scope.test.ts"]
+    },
+    {
+      "path": "packages/workflows/src/tools.ts",
+      "class": "critical",
+      "concern": "Tool enforcement pipeline; restricted actions must become approvals.",
+      "requiredTests": ["packages/workflows/tests/tools.test.ts"]
+    },
+    {
+      "path": "packages/workflows/src/orchestrator.ts",
+      "class": "critical",
+      "concern": "Acting-authority selection; agents must never inherit user authority.",
+      "requiredTests": ["packages/workflows/tests/orchestrator.test.ts"]
+    },
+    {
+      "path": "packages/workflows/src/classifier.ts",
+      "class": "sensitive",
+      "concern": "External-action detection must precede any model involvement.",
+      "requiredTests": ["packages/workflows/tests/classifier.test.ts"]
+    },
+    {
+      "path": "packages/security/src/audit.ts",
+      "class": "critical",
+      "concern": "Audit event construction with redaction before persistence.",
+      "requiredTests": ["packages/security/tests/security.test.ts"]
+    },
+    {
+      "path": "packages/security/src/redact.ts",
+      "class": "critical",
+      "concern": "Secret redaction for anything written to logs or audit.",
+      "requiredTests": ["packages/security/tests/security.test.ts"]
+    },
+    {
+      "path": "packages/security/src/constant-time.ts",
+      "class": "critical",
+      "concern": "Constant-time secret comparison without a length oracle.",
+      "requiredTests": ["packages/security/tests/constant-time.test.ts"]
+    },
+    {
+      "path": "packages/security/src/safe-error.ts",
+      "class": "critical",
+      "concern": "User-facing error surface; only PublicError messages may reach the browser.",
+      "requiredTests": ["packages/security/tests/security.test.ts"]
+    },
+    {
+      "path": "packages/security/src/rate-limit.ts",
+      "class": "sensitive",
+      "concern": "Rate limiting abstraction; in-memory implementation is temporary.",
+      "requiredTests": ["packages/security/tests/security.test.ts"]
+    },
+    {
+      "path": "packages/security/src/webhooks.ts",
+      "class": "sensitive",
+      "concern": "HMAC verification interface; no replay protection yet.",
+      "requiredTests": ["packages/security/tests/security.test.ts"]
+    },
+    {
+      "path": "packages/database/src/clients.ts",
+      "class": "critical",
+      "concern": "Service-role client construction; must never reach the browser.",
+      "requiredTests": ["packages/workflows/tests/tools.test.ts"]
+    },
+    {
+      "path": "apps/command-center/lib/prime-claim.ts",
+      "class": "critical",
+      "concern": "PRIME bootstrap token validation and rate-limit decisions.",
+      "requiredTests": ["apps/command-center/tests/prime-claim.test.ts"]
+    },
+    {
+      "path": "apps/command-center/lib/cron-auth.ts",
+      "class": "critical",
+      "concern": "Constant-time bearer check for the scheduled endpoint.",
+      "requiredTests": ["apps/command-center/tests/cron-auth.test.ts"]
+    },
+    {
+      "path": "apps/command-center/lib/auth.ts",
+      "class": "critical",
+      "concern": "Identity and membership resolution via the RLS-scoped client.",
+      "requiredTests": ["apps/command-center/tests/prime-claim.test.ts"]
+    },
+    {
+      "path": "apps/command-center/lib/jarvis.ts",
+      "class": "critical",
+      "concern": "Server-only service-role singletons; imports server-only.",
+      "requiredTests": ["apps/command-center/tests/cron-auth.test.ts"]
+    },
+    {
+      "path": "apps/command-center/middleware.ts",
+      "class": "critical",
+      "concern": "Route gating and session refresh.",
+      "requiredTests": ["apps/command-center/tests/cron-auth.test.ts"]
+    },
+    {
+      "path": "apps/command-center/app/actions/auth.ts",
+      "class": "critical",
+      "concern": "Sign-in/up/out and the PRIME claim flow.",
+      "requiredTests": ["apps/command-center/tests/prime-claim.test.ts"]
+    },
+    {
+      "path": "apps/command-center/app/actions/approvals.ts",
+      "class": "critical",
+      "concern": "PRIME-only approval transitions, dual-enforced with RLS.",
+      "requiredTests": ["packages/permissions/tests/policy.test.ts"]
+    },
+    {
+      "path": "supabase/migrations/0007_rls.sql",
+      "class": "critical",
+      "concern": "All RLS policies and helper functions.",
+      "requiredTests": ["supabase/tests/rls_verification.sql"]
+    },
+    {
+      "path": "supabase/migrations/0009_prime_bootstrap.sql",
+      "class": "critical",
+      "concern": "Claim RPC, nonce table, single-PRIME trigger.",
+      "requiredTests": [
+        "supabase/tests/prime_bootstrap_verification.sql",
+        "supabase/tests/race_prime_claim.sh"
+      ]
+    }
+  ],
+  "canonicalSources": {
+    "implementation": "source code",
+    "databaseStructure": "supabase/migrations/",
+    "databaseTypes": "packages/database/src/types.ts (hand-written; codegen in hardening commit 7)",
+    "authorizationPolicy": "packages/permissions/src/policy.ts (DB-canonical in hardening commit 5)",
+    "businessAgentDefinitions": "supabase/seed/seed.sql (duplicated in shared/src/constants.ts and database/src/store-memory.ts until hardening commit 6)",
+    "projectState": "docs/codebase/CURRENT_STATE.md",
+    "decisions": "docs/codebase/decisions/ (JEKS slice 3)"
+  },
+  "layerRules": {
+    "@jarvis/shared": [],
+    "@jarvis/permissions": ["@jarvis/shared"],
+    "@jarvis/security": ["@jarvis/shared"],
+    "@jarvis/database": ["@jarvis/shared"],
+    "@jarvis/ai": ["@jarvis/shared"],
+    "@jarvis/agents": ["@jarvis/shared"],
+    "@jarvis/ui": [],
+    "@jarvis/reporting": ["@jarvis/shared", "@jarvis/database"],
+    "@jarvis/integrations": ["@jarvis/shared", "@jarvis/security"],
+    "@jarvis/workflows": [
+      "@jarvis/shared",
+      "@jarvis/permissions",
+      "@jarvis/security",
+      "@jarvis/database",
+      "@jarvis/ai",
+      "@jarvis/agents",
+      "@jarvis/reporting"
+    ],
+    "@jarvis/command-center": [
+      "@jarvis/shared",
+      "@jarvis/permissions",
+      "@jarvis/security",
+      "@jarvis/database",
+      "@jarvis/ai",
+      "@jarvis/agents",
+      "@jarvis/workflows",
+      "@jarvis/reporting",
+      "@jarvis/integrations",
+      "@jarvis/ui"
+    ]
+  },
+  "securityPathPatterns": [
+    "lib/auth",
+    "lib/jarvis",
+    "lib/cron-auth",
+    "lib/prime-claim",
+    "middleware.ts",
+    "permissions/src/",
+    "security/src/",
+    "database/src/clients",
+    "actions/auth",
+    "actions/approvals",
+    "_rls.sql",
+    "_prime_bootstrap.sql"
+  ]
+}

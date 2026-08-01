@@ -18,7 +18,9 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "validate": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "validate": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "codebase:generate": "node --no-warnings tools/codebase/generate.ts",
+    "codebase:verify": "node --no-warnings tools/codebase/verify.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

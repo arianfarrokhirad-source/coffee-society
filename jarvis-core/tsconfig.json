@@ -1,8 +1,14 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    "allowImportingTsExtensions": true
   },
-  "include": ["packages/**/src/**/*.ts", "packages/**/tests/**/*.ts", "agents/**/*.ts"],
+  "include": [
+    "packages/**/src/**/*.ts",
+    "packages/**/tests/**/*.ts",
+    "agents/**/*.ts",
+    "tools/**/*.ts"
+  ],
   "exclude": ["node_modules", "**/node_modules"]
 }
