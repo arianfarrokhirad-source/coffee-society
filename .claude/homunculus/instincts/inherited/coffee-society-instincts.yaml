@@ -1,0 +1,587 @@
+# Instincts generated from https://github.com/arianfarrokhirad-source/coffee-society
+# Generated: 2026-08-01T10:37:53.441Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: coffee-society-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat
+
+## Evidence
+
+- 1 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: JARVIS Phase 1 — multi-business AI operating system foundation
+
+---
+id: coffee-society-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Commit Length
+
+## Action
+
+Write moderate-length commit messages (~68 characters)
+
+## Evidence
+
+- Average commit message length: 68 chars
+- Based on 1 commits
+
+---
+id: coffee-society-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: coffee-society-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: coffee-society-test-framework
+trigger: "when writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Test Framework
+
+## Action
+
+Use vitest as the test framework
+
+## Evidence
+
+- Test framework detected: vitest
+- File pattern: *.test.ts
+
+---
+id: coffee-society-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: coffee-society-test-types
+trigger: "when planning tests for a feature"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Test Types
+
+## Action
+
+Write unit, integration tests to match project standards
+
+## Evidence
+
+- Test types detected: unit, integration
+- Coverage config: no
+
+---
+id: coffee-society-workflow-add-new-package-module
+trigger: "when doing add new package module"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Workflow Add New Package Module
+
+## Action
+
+Follow the add-new-package-module workflow:
+1. Create new package directory under packages/ (e.g., packages/ai/)
+2. Add package.json with dependencies and metadata
+3. Implement core logic in src/ (e.g., src/index.ts, src/feature.ts)
+4. Write corresponding unit tests in tests/ (e.g., tests/feature.test.ts)
+5. Update monorepo package management files if needed (e.g., package-lock.json)
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: jarvis-core/packages/*/package.json, jarvis-core/packages/*/src/*.ts, jarvis-core/packages/*/tests/*.test.ts
+
+---
+id: coffee-society-workflow-add-database-table-with-migration-and-seed
+trigger: "when doing add database table with migration and seed"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Workflow Add Database Table With Migration And Seed
+
+## Action
+
+Follow the add-database-table-with-migration-and-seed workflow:
+1. Create new migration SQL file in supabase/migrations/ (e.g., 0003_agents.sql)
+2. Update seed data in supabase/seed/seed.sql
+3. Add or update verification scripts in supabase/tests/
+4. Update documentation if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~8x per month
+- Files: jarvis-core/supabase/migrations/*.sql, jarvis-core/supabase/seed/seed.sql, jarvis-core/supabase/tests/*.sql
+
+---
+id: coffee-society-workflow-add-new-agent-or-business
+trigger: "when doing add new agent or business"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Workflow Add New Agent Or Business
+
+## Action
+
+Follow the add-new-agent-or-business workflow:
+1. Create new role-card file under agents/ (e.g., agents/atlas/role-card.ts)
+2. Update agent or business registry in shared/src/constants.ts or similar
+3. Update documentation in docs/operations/ (e.g., adding-an-agent.md, adding-a-business.md)
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: jarvis-core/agents/*/role-card.ts, jarvis-core/packages/shared/src/constants.ts, jarvis-core/docs/operations/adding-an-agent.md
+
+---
+id: coffee-society-workflow-add-api-endpoint-with-auth-and-tests
+trigger: "when doing add api endpoint with auth and tests"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Workflow Add Api Endpoint With Auth And Tests
+
+## Action
+
+Follow the add-api-endpoint-with-auth-and-tests workflow:
+1. Create new route file under app/api/ (e.g., app/api/jarvis/chat/route.ts)
+2. Implement authentication and rate limiting in lib/ (e.g., lib/auth.ts, lib/cron-auth.ts)
+3. Write corresponding tests in tests/ (e.g., tests/cron-auth.test.ts)
+4. Update documentation if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: jarvis-core/apps/command-center/app/api/*/route.ts, jarvis-core/apps/command-center/lib/*.ts, jarvis-core/apps/command-center/tests/*.test.ts
+
+---
+id: coffee-society-instinct-file-naming
+trigger: "When creating or renaming a file in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct File Naming
+
+## Action
+
+Use camelCase for file names
+
+## Evidence
+
+- Pattern in namingConventions.files
+- Seen in jarvis-core/packages/ai/src/index.ts
+
+---
+id: coffee-society-instinct-function-naming
+trigger: "When defining a function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Function Naming
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in namingConventions.functions
+- Seen in jarvis-core/packages/ai/src/feature.ts
+
+---
+id: coffee-society-instinct-class-naming
+trigger: "When defining a class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Class Naming
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in namingConventions.classes
+- Seen in jarvis-core/packages/ai/src/feature.ts
+
+---
+id: coffee-society-instinct-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in namingConventions.constants
+- Seen in jarvis-core/packages/shared/src/constants.ts
+
+---
+id: coffee-society-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Import Style
+
+## Action
+
+Use mixed import styles as appropriate (default and named)
+
+## Evidence
+
+- Pattern in importStyle
+- Seen in jarvis-core/packages/ai/src/index.ts
+
+---
+id: coffee-society-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Pattern in exportStyle
+- Seen in jarvis-core/packages/ai/src/index.ts
+
+---
+id: coffee-society-instinct-test-file-pattern
+trigger: "When creating a test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Test File Pattern
+
+## Action
+
+Name the file with the pattern *.test.ts
+
+## Evidence
+
+- Pattern in testing.filePattern
+- Seen in jarvis-core/packages/ai/tests/feature.test.ts
+
+---
+id: coffee-society-instinct-test-location
+trigger: "When adding tests for a package"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Test Location
+
+## Action
+
+Place test files in a tests/ directory within the package
+
+## Evidence
+
+- Pattern in folderStructure.testLocation
+- Seen in jarvis-core/packages/ai/tests/feature.test.ts
+
+---
+id: coffee-society-instinct-test-framework
+trigger: "When writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Test Framework
+
+## Action
+
+Use the Vitest testing framework
+
+## Evidence
+
+- Pattern in testing.framework
+- Seen in jarvis-core/vitest.config.ts
+
+---
+id: coffee-society-instinct-test-types
+trigger: "When writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Test Types
+
+## Action
+
+Include both unit and integration tests as appropriate
+
+## Evidence
+
+- Pattern in testing.testTypes
+- Seen in jarvis-core/packages/ai/tests/feature.test.ts
+
+---
+id: coffee-society-instinct-git-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Git Commit Format
+
+## Action
+
+Use the conventional commit format with a prefix (e.g., feat: ...)
+
+## Evidence
+
+- Pattern in commits.type
+- Seen in commit 'feat: JARVIS Phase 1 — multi-business AI operating system foundation'
+
+---
+id: coffee-society-instinct-git-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Git Commit Length
+
+## Action
+
+Keep commit messages concise, around 68 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength
+- Seen in commit examples
+
+---
+id: coffee-society-instinct-add-new-package-module
+trigger: "When introducing a new logical module to the codebase"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Add New Package Module
+
+## Action
+
+Create a new package under packages/, add package.json, implement core logic in src/, write unit tests in tests/, and update package management files
+
+## Evidence
+
+- Workflow 'add-new-package-module'
+- Seen in files jarvis-core/packages/ai/package.json, jarvis-core/packages/ai/src/index.ts, jarvis-core/packages/ai/tests/feature.test.ts
+
+---
+id: coffee-society-instinct-add-database-table
+trigger: "When introducing a new entity or feature requiring persistent storage"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Add Database Table
+
+## Action
+
+Create a migration SQL file, update seed data, add or update verification scripts, and update documentation if needed
+
+## Evidence
+
+- Workflow 'add-database-table-with-migration-and-seed'
+- Seen in files jarvis-core/supabase/migrations/*.sql, jarvis-core/supabase/seed/seed.sql
+
+---
+id: coffee-society-instinct-add-new-agent-or-business
+trigger: "When onboarding a new agent or business"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Add New Agent Or Business
+
+## Action
+
+Create a new role-card file, update registry in shared/src/constants.ts, and update documentation
+
+## Evidence
+
+- Workflow 'add-new-agent-or-business'
+- Seen in files jarvis-core/agents/*/role-card.ts, jarvis-core/packages/shared/src/constants.ts
+
+---
+id: coffee-society-instinct-add-api-endpoint
+trigger: "When exposing a new API endpoint"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Add Api Endpoint
+
+## Action
+
+Create a new route file in app/api/, implement authentication and rate limiting in lib/, write tests, and update documentation if needed
+
+## Evidence
+
+- Workflow 'add-api-endpoint-with-auth-and-tests'
+- Seen in files jarvis-core/apps/command-center/app/api/*/route.ts, jarvis-core/apps/command-center/lib/*.ts
+
+---
+id: coffee-society-instinct-error-handling
+trigger: "When handling errors in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: arianfarrokhirad-source/coffee-society
+---
+
+# Coffee Society Instinct Error Handling
+
+## Action
+
+Use try-catch blocks for error handling
+
+## Evidence
+
+- Pattern in errorHandling.style
+- Seen in jarvis-core/packages/ai/src/feature.ts
+
