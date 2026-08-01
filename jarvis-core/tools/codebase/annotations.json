@@ -62,127 +62,171 @@
       "path": "packages/permissions/src/policy.ts",
       "class": "critical",
       "concern": "Action policy and approval gating; unknown actions must fail closed.",
-      "requiredTests": ["packages/permissions/tests/policy.test.ts"]
+      "requiredTests": [
+        "packages/permissions/tests/policy.test.ts"
+      ]
     },
     {
       "path": "packages/permissions/src/authority.ts",
       "class": "critical",
       "concern": "L0-L5 authority comparison.",
-      "requiredTests": ["packages/permissions/tests/authority.test.ts"]
+      "requiredTests": [
+        "packages/permissions/tests/authority.test.ts"
+      ]
     },
     {
       "path": "packages/permissions/src/agent-scope.ts",
       "class": "critical",
       "concern": "Agent containment: business scope, allowlist, denylist.",
-      "requiredTests": ["packages/permissions/tests/agent-scope.test.ts"]
+      "requiredTests": [
+        "packages/permissions/tests/agent-scope.test.ts"
+      ]
     },
     {
       "path": "packages/workflows/src/tools.ts",
       "class": "critical",
       "concern": "Tool enforcement pipeline; restricted actions must become approvals.",
-      "requiredTests": ["packages/workflows/tests/tools.test.ts"]
+      "requiredTests": [
+        "packages/workflows/tests/tools.test.ts"
+      ]
     },
     {
       "path": "packages/workflows/src/orchestrator.ts",
       "class": "critical",
       "concern": "Acting-authority selection; agents must never inherit user authority.",
-      "requiredTests": ["packages/workflows/tests/orchestrator.test.ts"]
+      "requiredTests": [
+        "packages/workflows/tests/orchestrator.test.ts"
+      ]
     },
     {
       "path": "packages/workflows/src/classifier.ts",
       "class": "sensitive",
       "concern": "External-action detection must precede any model involvement.",
-      "requiredTests": ["packages/workflows/tests/classifier.test.ts"]
+      "requiredTests": [
+        "packages/workflows/tests/classifier.test.ts"
+      ]
     },
     {
       "path": "packages/security/src/audit.ts",
       "class": "critical",
       "concern": "Audit event construction with redaction before persistence.",
-      "requiredTests": ["packages/security/tests/security.test.ts"]
+      "requiredTests": [
+        "packages/database/tests/critical-audit.test.ts",
+        "packages/security/tests/security.test.ts"
+      ]
     },
     {
       "path": "packages/security/src/redact.ts",
       "class": "critical",
       "concern": "Secret redaction for anything written to logs or audit.",
-      "requiredTests": ["packages/security/tests/security.test.ts"]
+      "requiredTests": [
+        "packages/database/tests/critical-audit.test.ts",
+        "packages/security/tests/security.test.ts"
+      ]
     },
     {
       "path": "packages/security/src/constant-time.ts",
       "class": "critical",
       "concern": "Constant-time secret comparison without a length oracle.",
-      "requiredTests": ["packages/security/tests/constant-time.test.ts"]
+      "requiredTests": [
+        "packages/security/tests/constant-time.test.ts"
+      ]
     },
     {
       "path": "packages/security/src/safe-error.ts",
       "class": "critical",
       "concern": "User-facing error surface; only PublicError messages may reach the browser.",
-      "requiredTests": ["packages/security/tests/security.test.ts"]
+      "requiredTests": [
+        "packages/security/tests/security.test.ts"
+      ]
     },
     {
       "path": "packages/security/src/rate-limit.ts",
       "class": "sensitive",
       "concern": "Rate limiting abstraction; in-memory implementation is temporary.",
-      "requiredTests": ["packages/security/tests/security.test.ts"]
+      "requiredTests": [
+        "packages/security/tests/security.test.ts"
+      ]
     },
     {
       "path": "packages/security/src/webhooks.ts",
       "class": "sensitive",
       "concern": "HMAC verification interface; no replay protection yet.",
-      "requiredTests": ["packages/security/tests/security.test.ts"]
+      "requiredTests": [
+        "packages/security/tests/security.test.ts"
+      ]
     },
     {
       "path": "packages/database/src/clients.ts",
       "class": "critical",
       "concern": "Service-role client construction; must never reach the browser.",
-      "requiredTests": ["packages/workflows/tests/tools.test.ts"]
+      "requiredTests": [
+        "packages/workflows/tests/tools.test.ts"
+      ]
     },
     {
       "path": "apps/command-center/lib/prime-claim.ts",
       "class": "critical",
       "concern": "PRIME bootstrap token validation and rate-limit decisions.",
-      "requiredTests": ["apps/command-center/tests/prime-claim.test.ts"]
+      "requiredTests": [
+        "apps/command-center/tests/prime-claim.test.ts"
+      ]
     },
     {
       "path": "apps/command-center/lib/cron-auth.ts",
       "class": "critical",
       "concern": "Constant-time bearer check for the scheduled endpoint.",
-      "requiredTests": ["apps/command-center/tests/cron-auth.test.ts"]
+      "requiredTests": [
+        "apps/command-center/tests/cron-auth.test.ts"
+      ]
     },
     {
       "path": "apps/command-center/lib/auth.ts",
       "class": "critical",
       "concern": "Identity and membership resolution via the RLS-scoped client.",
-      "requiredTests": ["apps/command-center/tests/prime-claim.test.ts"]
+      "requiredTests": [
+        "apps/command-center/tests/prime-claim.test.ts"
+      ]
     },
     {
       "path": "apps/command-center/lib/jarvis.ts",
       "class": "critical",
       "concern": "Server-only service-role singletons; imports server-only.",
-      "requiredTests": ["apps/command-center/tests/cron-auth.test.ts"]
+      "requiredTests": [
+        "apps/command-center/tests/cron-auth.test.ts"
+      ]
     },
     {
       "path": "apps/command-center/middleware.ts",
       "class": "critical",
       "concern": "Route gating and session refresh.",
-      "requiredTests": ["apps/command-center/tests/cron-auth.test.ts"]
+      "requiredTests": [
+        "apps/command-center/tests/cron-auth.test.ts"
+      ]
     },
     {
       "path": "apps/command-center/app/actions/auth.ts",
       "class": "critical",
       "concern": "Sign-in/up/out and the PRIME claim flow.",
-      "requiredTests": ["apps/command-center/tests/prime-claim.test.ts"]
+      "requiredTests": [
+        "apps/command-center/tests/prime-claim.test.ts"
+      ]
     },
     {
       "path": "apps/command-center/app/actions/approvals.ts",
       "class": "critical",
       "concern": "PRIME-only approval transitions, dual-enforced with RLS.",
-      "requiredTests": ["packages/permissions/tests/policy.test.ts"]
+      "requiredTests": [
+        "packages/permissions/tests/policy.test.ts"
+      ]
     },
     {
       "path": "supabase/migrations/0007_rls.sql",
       "class": "critical",
       "concern": "All RLS policies and helper functions.",
-      "requiredTests": ["supabase/tests/rls_verification.sql"]
+      "requiredTests": [
+        "supabase/tests/rls_verification.sql"
+      ]
     },
     {
       "path": "supabase/migrations/0009_prime_bootstrap.sql",
@@ -191,6 +235,33 @@
       "requiredTests": [
         "supabase/tests/prime_bootstrap_verification.sql",
         "supabase/tests/race_prime_claim.sh"
+      ]
+    },
+    {
+      "path": "supabase/migrations/0010_critical_auditing.sql",
+      "class": "critical",
+      "concern": "Atomic state+audit RPCs for every security-critical change; drops the direct write policies on approvals, memberships and agents.",
+      "requiredTests": [
+        "supabase/tests/critical_audit_verification.sql",
+        "supabase/tests/race_approval_transition.sh",
+        "supabase/tests/rls_verification.sql"
+      ]
+    },
+    {
+      "path": "packages/shared/src/approval-transitions.ts",
+      "class": "critical",
+      "concern": "TypeScript mirror of the SQL transition matrix and the request_origin enumeration; must stay in parity with the database.",
+      "requiredTests": [
+        "apps/command-center/tests/approval-transitions.test.ts",
+        "supabase/tests/transition_parity.sh"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/approval-transitions.ts",
+      "class": "critical",
+      "concern": "Maps RPC reason identifiers to user-facing messages; anything unrecognised must collapse to a generic string so database internals do not reach the browser.",
+      "requiredTests": [
+        "apps/command-center/tests/approval-transitions.test.ts"
       ]
     }
   ],
@@ -205,14 +276,30 @@
   },
   "layerRules": {
     "@jarvis/shared": [],
-    "@jarvis/permissions": ["@jarvis/shared"],
-    "@jarvis/security": ["@jarvis/shared"],
-    "@jarvis/database": ["@jarvis/shared"],
-    "@jarvis/ai": ["@jarvis/shared"],
-    "@jarvis/agents": ["@jarvis/shared"],
+    "@jarvis/permissions": [
+      "@jarvis/shared"
+    ],
+    "@jarvis/security": [
+      "@jarvis/shared"
+    ],
+    "@jarvis/database": [
+      "@jarvis/shared"
+    ],
+    "@jarvis/ai": [
+      "@jarvis/shared"
+    ],
+    "@jarvis/agents": [
+      "@jarvis/shared"
+    ],
     "@jarvis/ui": [],
-    "@jarvis/reporting": ["@jarvis/shared", "@jarvis/database"],
-    "@jarvis/integrations": ["@jarvis/shared", "@jarvis/security"],
+    "@jarvis/reporting": [
+      "@jarvis/shared",
+      "@jarvis/database"
+    ],
+    "@jarvis/integrations": [
+      "@jarvis/shared",
+      "@jarvis/security"
+    ],
     "@jarvis/workflows": [
       "@jarvis/shared",
       "@jarvis/permissions",
@@ -248,7 +335,7 @@
     },
     "approval.requested": {
       "consumers": [],
-      "guarantee": "best_effort",
+      "guarantee": "atomic",
       "securityClass": "security_relevant"
     },
     "approval.*": {
@@ -345,6 +432,86 @@
       "consumers": [],
       "guarantee": "best_effort",
       "securityClass": "telemetry"
+    },
+    "approval.created": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.approved": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.rejected": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.modified": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.cancelled": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.expired": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.executed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.failed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "membership.created": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "membership.role_changed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "membership.revoked": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "agent.authority_changed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "agent.activated": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "agent.deactivated": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "agent.financial_authority_changed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "agent.actions_changed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
     }
   },
   "securityPathPatterns": [
@@ -359,6 +526,8 @@
     "actions/auth",
     "actions/approvals",
     "_rls.sql",
-    "_prime_bootstrap.sql"
+    "_prime_bootstrap.sql",
+    "_critical_auditing.sql",
+    "approval-transitions"
   ]
 }

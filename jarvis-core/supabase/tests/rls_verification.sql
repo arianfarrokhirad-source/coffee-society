@@ -64,7 +64,10 @@ begin
   foreach t in array array[
     'agent_runs','agent_messages','tool_calls','model_usage','audit_logs',
     'daily_briefs','system_events','roles','permissions','role_permissions',
-    'prime_claim_nonces'
+    'prime_claim_nonces',
+    -- Added by 0010: these three moved behind audited RPCs, so a client
+    -- write policy on any of them would reopen the unaudited path.
+    'approvals','memberships','agents'
   ]
   loop
     if exists (
@@ -79,6 +82,24 @@ begin
     raise exception 'WRITE POLICIES EXIST on server-only tables: %', array_to_string(bad, ', ');
   end if;
   raise notice 'PASS: server-only tables have no client write policies';
+end $$;
+
+-- 3b. The specific policies dropped by 0010 must stay dropped. Named
+--     explicitly so a migration that recreates one fails here rather
+--     than silently restoring an unaudited write path.
+do $$
+declare
+  restored text;
+begin
+  select string_agg(policyname, ', ') into restored
+  from pg_policies
+  where schemaname = 'public'
+    and policyname in ('approvals_update_prime', 'approvals_insert',
+                       'memberships_write_prime', 'agents_write');
+  if restored is not null then
+    raise exception 'POLICIES DROPPED BY 0010 HAVE BEEN RESTORED: %', restored;
+  end if;
+  raise notice 'PASS: 0010 policy drops still in force';
 end $$;
 
 -- 4. audit_logs must be append-only even for the service role.

@@ -30,21 +30,24 @@ security-relevant, it is — read this.
 
 ## Security-critical files (change ⇒ tests below must pass)
 
-| File                                                  | Concern                         | Required tests                                             |
-| ----------------------------------------------------- | ------------------------------- | ---------------------------------------------------------- |
-| `packages/permissions/src/policy.ts`                  | authority + approval gating     | `packages/permissions/tests/policy.test.ts`                |
-| `packages/permissions/src/authority.ts`               | L0–L5 comparison                | `…/tests/authority.test.ts`                                |
-| `packages/permissions/src/agent-scope.ts`             | agent containment               | `…/tests/agent-scope.test.ts`                              |
-| `packages/workflows/src/tools.ts`                     | enforcement pipeline            | `packages/workflows/tests/tools.test.ts`                   |
-| `packages/security/src/{audit,redact}.ts`             | audit + secret redaction        | `packages/security/tests/security.test.ts`                 |
-| `packages/security/src/constant-time.ts`              | secret comparison               | `packages/security/tests/constant-time.test.ts`            |
-| `packages/database/src/clients.ts`                    | service-role construction       | build must fail if imported client-side                    |
-| `apps/command-center/lib/prime-claim.ts`              | PRIME bootstrap logic           | `apps/command-center/tests/prime-claim.test.ts`            |
-| `apps/command-center/lib/cron-auth.ts`                | cron bearer check               | `apps/command-center/tests/cron-auth.test.ts`              |
-| `apps/command-center/app/actions/{auth,approvals}.ts` | claim + approval transitions    | SQL suites below                                           |
-| `apps/command-center/middleware.ts`                   | route gating                    | manual: unauthenticated → 307 `/login`                     |
-| `supabase/migrations/0007_rls.sql`                    | RLS policies                    | `supabase/tests/rls_verification.sql`                      |
-| `supabase/migrations/0009_prime_bootstrap.sql`        | claim RPC, single-PRIME trigger | `prime_bootstrap_verification.sql` + `race_prime_claim.sh` |
+| File                                                  | Concern                         | Required tests                                                    |
+| ----------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
+| `packages/permissions/src/policy.ts`                  | authority + approval gating     | `packages/permissions/tests/policy.test.ts`                       |
+| `packages/permissions/src/authority.ts`               | L0–L5 comparison                | `…/tests/authority.test.ts`                                       |
+| `packages/permissions/src/agent-scope.ts`             | agent containment               | `…/tests/agent-scope.test.ts`                                     |
+| `packages/workflows/src/tools.ts`                     | enforcement pipeline            | `packages/workflows/tests/tools.test.ts`                          |
+| `packages/security/src/{audit,redact}.ts`             | audit + secret redaction        | `packages/security/tests/security.test.ts`                        |
+| `packages/security/src/constant-time.ts`              | secret comparison               | `packages/security/tests/constant-time.test.ts`                   |
+| `packages/database/src/clients.ts`                    | service-role construction       | build must fail if imported client-side                           |
+| `apps/command-center/lib/prime-claim.ts`              | PRIME bootstrap logic           | `apps/command-center/tests/prime-claim.test.ts`                   |
+| `apps/command-center/lib/cron-auth.ts`                | cron bearer check               | `apps/command-center/tests/cron-auth.test.ts`                     |
+| `apps/command-center/app/actions/{auth,approvals}.ts` | claim + approval transitions    | SQL suites below                                                  |
+| `apps/command-center/lib/approval-transitions.ts`     | RPC error mapping (no leaks)    | `apps/command-center/tests/approval-transitions.test.ts`          |
+| `packages/shared/src/approval-transitions.ts`         | transition matrix mirror        | `…/approval-transitions.test.ts` + `transition_parity.sh`         |
+| `apps/command-center/middleware.ts`                   | route gating                    | manual: unauthenticated → 307 `/login`                            |
+| `supabase/migrations/0007_rls.sql`                    | RLS policies                    | `supabase/tests/rls_verification.sql`                             |
+| `supabase/migrations/0009_prime_bootstrap.sql`        | claim RPC, single-PRIME trigger | `prime_bootstrap_verification.sql` + `race_prime_claim.sh`        |
+| `supabase/migrations/0010_critical_auditing.sql`      | atomic critical audit RPCs      | `critical_audit_verification.sql` + `race_approval_transition.sh` |
 
 ## PRIME bootstrap (implemented, commit 1)
 
@@ -56,6 +59,42 @@ membership + `prime.claimed` audit **in one transaction**. A constraint trigger
 independently blocks a second active PRIME. Denials audited as
 `prime.claim_denied`, rate limited 5/15 min from audit rows.
 
+## Fail-closed critical auditing (implemented, commit 2)
+
+Every security-critical state change moves behind a `SECURITY DEFINER` RPC in
+`0010_critical_auditing.sql` that applies the change, writes the audit row and
+emits the domain event **in one transaction**. Any failure rolls back all
+three, so a decision can never exist without the record of who made it.
+
+The boundary is structural, not advisory: 0010 also **drops**
+`approvals_update_prime`, `approvals_insert`, `memberships_write_prime` and
+`agents_write`, leaving the RPCs as the only write path. `rls_verification.sql`
+pins those drops so a later migration cannot quietly restore them.
+
+- **Transition rules live in ONE place**: `public.approval_transition_allowed`.
+  The TypeScript mirror in `@jarvis/shared` is pinned to it by
+  `transition_parity.sh`, which compares all 320 combinations.
+- **Guards**: `not_prime` · `stale_status` (optimistic concurrency) ·
+  `invalid_transition` · `self_modification_denied` ·
+  `authority_ceiling_exceeded` · `last_prime_protected` · `invalid_amount`.
+- **Idempotency**: `(resource_id, action, request_id)` unique index, plus
+  `(action, request_id)` for creations — a created row's id is generated by the
+  operation, so it cannot collide on resource id. Creation additionally takes
+  advisory lock `(742618, hashtext(request_id))` so a concurrent duplicate
+  waits and returns the first result rather than erroring.
+- **`request_origin`** (`web` · `agent` · `cron` · `api` · `executor` ·
+  `migration`) is validated inside `write_critical_audit` and always wins over
+  caller-supplied metadata.
+- **Payloads are hashed, never copied**: approval audits carry
+  `payload_sha256`, so a secret in an action argument cannot be read back out
+  of the audit log.
+
+`last_prime_protected` is **defence in depth and currently unreachable**:
+reaching it needs a second active PRIME as actor, which 0009's single-PRIME
+trigger forbids, and a PRIME cannot act on its own row. It is retained for when
+delegated administration makes it reachable. Check 15 of
+`critical_audit_verification.sql` pins that composition.
+
 ## Audit terminology — use exactly these words
 
 - **Append-only** at application/database-role level (trigger blocks
@@ -63,15 +102,22 @@ independently blocks a second active PRIME. Denials audited as
 - **Deletion-resistant** for application roles.
 - **NOT tamper-proof** — an owner can drop the trigger.
 - **NOT yet tamper-evident** — needs hash chaining.
-- **Critical** audits commit with their state change (PRIME claim only today);
-  everything else is best-effort telemetry until commit 2.
+- **Critical** audits commit with their state change (the 16 actions in
+  `CRITICAL_AUDIT_ACTIONS`); `buildAuditEvent` throws if handed one, so the
+  non-atomic path cannot be used by accident.
+- **Telemetry** audits (tool calls, run lifecycle, briefs, auth) are
+  best-effort and non-transactional by design.
+- **NOT globally atomic** with third-party systems — Supabase Auth and any
+  future external executor are separate transactional domains.
 
 ## Known weaknesses (documented, not defects to fix opportunistically)
 
 CSP allows `'unsafe-inline'` scripts · rate limiter is in-memory per instance
 and never evicts keys · public signups open by default · no 2FA · audit
 `metadata` lacks IP/user-agent · webhook verifier has no replay protection ·
-`JARVIS_ENCRYPTION_KEY` reserved but unused.
+`JARVIS_ENCRYPTION_KEY` reserved but unused · an approved action has no
+`unknown_outcome` state, so a future executor that dies mid-flight would leave
+a row reading `approved` (see `ARCHITECTURE_EVOLUTION.md`).
 
 ## Before you commit a security change
 

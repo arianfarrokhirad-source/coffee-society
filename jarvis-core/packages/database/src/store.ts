@@ -1,4 +1,11 @@
-import type { AgentCode, BusinessCode, PriorityLevel, RiskLevel } from '@jarvis/shared'
+import type {
+  AgentCode,
+  ApprovalStatus,
+  BusinessCode,
+  PriorityLevel,
+  RequestOrigin,
+  RiskLevel,
+} from '@jarvis/shared'
 import type { PersistableAuditEvent } from './audit'
 import type {
   AgentRow,
@@ -76,6 +83,30 @@ export interface CreateApprovalInput {
   currency?: string | null
   riskLevel: RiskLevel
   expiresAt?: string | null
+  /**
+   * Idempotency key. Replaying the same value never creates a second
+   * approval; the database enforces this, not the caller.
+   */
+  requestId: string
+  origin: RequestOrigin
+  /** Merged into the audit row's metadata. Never the action payload. */
+  metadata?: Record<string, unknown> | null
+}
+
+/**
+ * A PRIME resolution of a pending approval. `expectedStatus` is
+ * optimistic concurrency: the change is refused if the record moved
+ * since the caller read it.
+ */
+export interface ResolveApprovalInput {
+  actorId: string
+  approvalId: string
+  expectedStatus: ApprovalStatus
+  resolution: ApprovalStatus
+  requestId: string
+  origin: RequestOrigin
+  /** Only meaningful when resolution is 'modified'. */
+  modifiedPayload?: Record<string, unknown> | null
 }
 
 export interface CreateAgentRunInput {
@@ -175,7 +206,19 @@ export interface JarvisStore {
   recordDecision(input: RecordDecisionInput): Promise<DecisionRow>
 
   listPendingApprovals(businessId?: string): Promise<ApprovalRow[]>
+  /**
+   * Creates an approval together with its audit row and domain event in
+   * one database transaction. There is no unaudited path: the client
+   * write policy on `approvals` was dropped in migration 0010.
+   */
   createApproval(input: CreateApprovalInput): Promise<ApprovalRow>
+  /**
+   * Applies a PRIME resolution atomically with its audit row and event.
+   * Throws with the database's reason identifier (`not_prime`,
+   * `stale_status`, `invalid_transition`, …) so the caller can map it;
+   * see apps/command-center/lib/approval-transitions.ts.
+   */
+  resolveApproval(input: ResolveApprovalInput): Promise<ApprovalRow>
 
   searchDocuments(query: string, businessId?: string): Promise<DocumentRow[]>
   getBusinessSummary(businessId: string): Promise<BusinessSummary | null>

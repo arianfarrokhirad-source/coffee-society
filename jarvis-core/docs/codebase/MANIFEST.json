@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-01T14:25:22.043Z",
-  "repositoryCommit": "454e6d81c15c399e079158840e132b5cd8086b6a",
+  "generatedAt": "2026-08-01T15:23:03.004Z",
+  "repositoryCommit": "329a943d64a49e899acaf19e22f97903d9d46305",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -79,6 +79,7 @@
       ],
       "consumers": [],
       "tests": [
+        "apps/command-center/tests/approval-transitions.test.ts",
         "apps/command-center/tests/cron-auth.test.ts",
         "apps/command-center/tests/prime-claim.test.ts"
       ],
@@ -105,7 +106,9 @@
         "@jarvis/reporting",
         "@jarvis/workflows"
       ],
-      "tests": [],
+      "tests": [
+        "packages/database/tests/critical-audit.test.ts"
+      ],
       "purpose": "Typed rows, client factories, JarvisStore seam with Supabase and in-memory implementations.",
       "securitySensitivity": "critical",
       "stability": "changing"
@@ -209,6 +212,7 @@
       "name": "@jarvis/shared",
       "path": "packages/shared",
       "exports": [
+        "* ./approval-transitions",
         "* ./constants",
         "* ./result",
         "* ./schemas"
@@ -334,6 +338,7 @@
       "class": "critical",
       "concern": "Audit event construction with redaction before persistence.",
       "requiredTests": [
+        "packages/database/tests/critical-audit.test.ts",
         "packages/security/tests/security.test.ts"
       ]
     },
@@ -342,6 +347,7 @@
       "class": "critical",
       "concern": "Secret redaction for anything written to logs or audit.",
       "requiredTests": [
+        "packages/database/tests/critical-audit.test.ts",
         "packages/security/tests/security.test.ts"
       ]
     },
@@ -457,6 +463,33 @@
         "supabase/tests/prime_bootstrap_verification.sql",
         "supabase/tests/race_prime_claim.sh"
       ]
+    },
+    {
+      "path": "supabase/migrations/0010_critical_auditing.sql",
+      "class": "critical",
+      "concern": "Atomic state+audit RPCs for every security-critical change; drops the direct write policies on approvals, memberships and agents.",
+      "requiredTests": [
+        "supabase/tests/critical_audit_verification.sql",
+        "supabase/tests/race_approval_transition.sh",
+        "supabase/tests/rls_verification.sql"
+      ]
+    },
+    {
+      "path": "packages/shared/src/approval-transitions.ts",
+      "class": "critical",
+      "concern": "TypeScript mirror of the SQL transition matrix and the request_origin enumeration; must stay in parity with the database.",
+      "requiredTests": [
+        "apps/command-center/tests/approval-transitions.test.ts",
+        "supabase/tests/transition_parity.sh"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/approval-transitions.ts",
+      "class": "critical",
+      "concern": "Maps RPC reason identifiers to user-facing messages; anything unrecognised must collapse to a generic string so database internals do not reach the browser.",
+      "requiredTests": [
+        "apps/command-center/tests/approval-transitions.test.ts"
+      ]
     }
   ],
   "databaseMigrations": [
@@ -495,6 +528,10 @@
     {
       "path": "supabase/migrations/0009_prime_bootstrap.sql",
       "sha256": "98f08332e6ec12afc96d690aa4cce1ec198486f0cac1b9b7fe35139da7feef74"
+    },
+    {
+      "path": "supabase/migrations/0010_critical_auditing.sql",
+      "sha256": "b0da83b22025cf5b89911cdf6a04c62c6f1e9eeab73afa902eec68d339aa15ac"
     }
   ],
   "agents": [
@@ -707,10 +744,12 @@
     }
   ],
   "tests": [
+    "apps/command-center/tests/approval-transitions.test.ts",
     "apps/command-center/tests/cron-auth.test.ts",
     "apps/command-center/tests/prime-claim.test.ts",
     "packages/ai/tests/router.test.ts",
     "packages/ai/tests/structured.test.ts",
+    "packages/database/tests/critical-audit.test.ts",
     "packages/integrations/tests/integrations.test.ts",
     "packages/permissions/tests/agent-scope.test.ts",
     "packages/permissions/tests/authority.test.ts",
@@ -723,10 +762,13 @@
     "packages/workflows/tests/classifier.test.ts",
     "packages/workflows/tests/orchestrator.test.ts",
     "packages/workflows/tests/tools.test.ts",
+    "supabase/tests/critical_audit_verification.sql",
     "supabase/tests/local_harness.sql",
     "supabase/tests/prime_bootstrap_verification.sql",
+    "supabase/tests/race_approval_transition.sh",
     "supabase/tests/race_prime_claim.sh",
-    "supabase/tests/rls_verification.sql"
+    "supabase/tests/rls_verification.sql",
+    "supabase/tests/transition_parity.sh"
   ],
   "dependencyGraph": [
     {
@@ -845,6 +887,56 @@
   },
   "domainEvents": [
     {
+      "name": "agent.actions_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.activated",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.authority_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.deactivated",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.financial_authority_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
       "name": "agent.run.completed",
       "kind": "system_event",
       "producers": [
@@ -885,23 +977,35 @@
       "securityClass": "operational"
     },
     {
-      "name": "approval.*",
+      "name": "approval.created",
       "kind": "audit_action",
       "producers": [
-        "apps/command-center/app/actions/approvals.ts"
+        "packages/database/src/store-memory.ts",
+        "supabase/migrations/0010_critical_auditing.sql"
       ],
       "consumers": [],
-      "guarantee": "best_effort",
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "approval.expired",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
       "securityClass": "security_relevant"
     },
     {
       "name": "approval.requested",
-      "kind": "audit_action",
+      "kind": "system_event",
       "producers": [
-        "packages/workflows/src/tools.ts"
+        "packages/database/src/store-memory.ts",
+        "supabase/migrations/0010_critical_auditing.sql"
       ],
       "consumers": [],
-      "guarantee": "best_effort",
+      "guarantee": "atomic",
       "securityClass": "security_relevant"
     },
     {
@@ -973,6 +1077,36 @@
       "consumers": [],
       "guarantee": "best_effort",
       "securityClass": "operational"
+    },
+    {
+      "name": "membership.created",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "membership.revoked",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "membership.role_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
     },
     {
       "name": "objective.created",

@@ -35,12 +35,33 @@ State these accurately; do not overstate them:
 - **NOT yet tamper-evident** — that requires hash chaining (each row
   committing to its predecessor), which is planned but not implemented.
 
-Some writes are **critical** (fail-closed): the state change and its audit row
-commit in the same database transaction, so the change cannot exist without its
-audit record. PRIME claiming is the first such path
-(`claim_prime_with_nonce()`); a later commit generalizes this to approval
-transitions and other security-critical actions. Operational telemetry
-(tool calls, run summaries) remains best-effort.
+- **NOT globally atomic with third-party systems.** Supabase Auth and any
+  future external executor are separate transactional domains.
+
+Writes fall into two classes, and the distinction is a security boundary
+rather than a naming convention:
+
+**Critical (fail-closed).** The state change, its audit row and its domain
+event commit in one database transaction, so the change cannot exist without
+the record of who made it. `0010_critical_auditing.sql` covers approval
+creation, every approval transition, membership assignment/role change/
+revocation, and every agent authority change; `0009` covers PRIME claiming.
+Each runs as a `SECURITY DEFINER` function with an empty `search_path`,
+granted only to `service_role`.
+
+The boundary is structural: 0010 **drops** the client write policies
+`approvals_update_prime`, `approvals_insert`, `memberships_write_prime` and
+`agents_write`, so the RPCs are the only remaining write path. Application
+code cannot opt out — `buildAuditEvent` throws if handed one of the 16
+critical actions.
+
+Approval audits record `payload_sha256` and never the payload itself, so a
+secret inside an action argument cannot be read back out of the audit log.
+Each critical audit row carries a `request_id` and a validated
+`request_origin` (`web`, `agent`, `cron`, `api`, `executor`, `migration`).
+
+**Telemetry (best-effort).** Tool calls, run summaries, brief generation and
+auth events. Losing one is an observability gap, not a governance failure.
 
 ## Authentication & session
 

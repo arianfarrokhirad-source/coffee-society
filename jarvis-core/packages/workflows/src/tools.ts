@@ -5,7 +5,7 @@ import { canAgentAct, checkApproval } from '@jarvis/permissions'
 import { generateDailyBrief } from '@jarvis/reporting'
 import type { AuthorityLevel, BusinessCode } from '@jarvis/shared'
 import { PRIORITY_LEVELS } from '@jarvis/shared'
-import { buildAuditEvent, type RateLimiter } from '@jarvis/security'
+import { buildAuditEvent, sha256Hex, type RateLimiter } from '@jarvis/security'
 
 // ---------------------------------------------------------------------
 // Internal tool system (section 17). Models REQUEST tools; this pipeline
@@ -233,6 +233,7 @@ export const TOOLS = {
       riskLevel: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
     }),
     async execute(ctx, args) {
+      const actionPayload = args.actionPayload as Record<string, unknown>
       return ctx.store.createApproval({
         organizationId: ctx.organizationId,
         businessId: ctx.businessId,
@@ -240,11 +241,19 @@ export const TOOLS = {
         requestedByUserId:
           ctx.actor.type === 'user' ? ctx.actor.id : (ctx.actor.onBehalfOfProfileId ?? null),
         actionType: args.actionType,
-        actionPayload: args.actionPayload as Record<string, unknown>,
+        actionPayload,
         reason: args.reason,
         estimatedCost: args.estimatedCost ?? null,
         currency: args.currency ?? null,
         riskLevel: args.riskLevel,
+        // Same reasoning as the implicit path above: keyed per request
+        // AND per distinct payload, so a retry is idempotent but two
+        // genuinely different asks in one run stay separate.
+        requestId: `${ctx.requestId}:requestApproval:${sha256Hex(
+          JSON.stringify({ actionType: args.actionType, actionPayload })
+        ).slice(0, 16)}`,
+        origin: ctx.actor.type === 'agent' ? 'agent' : 'web',
+        metadata: { toolName: 'requestApproval' },
       })
     },
   }),
@@ -374,6 +383,18 @@ export async function executeTool(
 
   // requestApproval itself must not recurse into approval creation.
   if (!approvalCheck.allowed && toolName !== 'requestApproval') {
+    const actionPayload = { tool: toolName, arguments: parsed.data as Record<string, unknown> }
+
+    // createApproval writes the approval, its audit row and the
+    // approval.requested event in one transaction, so there is no
+    // separate writeAudit here — a second audit write would reintroduce
+    // exactly the non-atomic path migration 0010 closed.
+    //
+    // The idempotency key must be unique per approval, not per run: one
+    // run may need approval for two different calls, and a key of only
+    // ctx.requestId would silently collapse the second into the first.
+    // Hashing the payload keeps genuine retries idempotent while keeping
+    // distinct calls distinct.
     const approval = await ctx.store.createApproval({
       organizationId: ctx.organizationId,
       businessId: ctx.businessId,
@@ -381,24 +402,14 @@ export async function executeTool(
       requestedByUserId:
         ctx.actor.type === 'user' ? ctx.actor.id : (ctx.actor.onBehalfOfProfileId ?? null),
       actionType: tool.policyAction,
-      actionPayload: { tool: toolName, arguments: parsed.data as Record<string, unknown> },
+      actionPayload,
       reason: approvalCheck.reason,
       estimatedCost,
       riskLevel: approvalCheck.risk,
+      requestId: `${ctx.requestId}:${toolName}:${sha256Hex(JSON.stringify(actionPayload)).slice(0, 16)}`,
+      origin: ctx.actor.type === 'agent' ? 'agent' : 'web',
+      metadata: { toolName, reason: approvalCheck.reason },
     })
-    await ctx.store.writeAudit(
-      buildAuditEvent({
-        organizationId: ctx.organizationId,
-        businessId: ctx.businessId,
-        actorType: ctx.actor.type,
-        actorId: ctx.actor.id,
-        action: 'approval.requested',
-        resourceType: 'approval',
-        resourceId: approval.id,
-        requestId: ctx.requestId,
-        metadata: { toolName, reason: approvalCheck.reason },
-      })
-    )
     await ctx.store.recordToolCall({
       organizationId: ctx.organizationId,
       runId: ctx.runId ?? null,

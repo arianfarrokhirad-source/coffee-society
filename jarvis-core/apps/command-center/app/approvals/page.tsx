@@ -67,7 +67,7 @@ export default async function ApprovalsPage() {
                 </p>
                 {auth?.isPrime && (
                   <div className="mt-3">
-                    <ApprovalActions approvalId={a.id} />
+                    <ApprovalActions approvalId={a.id} currentStatus={a.status} />
                   </div>
                 )}
               </div>

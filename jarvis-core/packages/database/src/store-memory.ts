@@ -1,6 +1,6 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { AgentCode, BusinessCode } from '@jarvis/shared'
-import { BUSINESS_NAMES } from '@jarvis/shared'
+import { approvalTransitionAllowed, BUSINESS_NAMES, isRequestOrigin } from '@jarvis/shared'
 import type { PersistableAuditEvent } from './audit'
 import type {
   BriefData,
@@ -14,6 +14,7 @@ import type {
   RecordDecisionInput,
   RecordModelUsageInput,
   RecordToolCallInput,
+  ResolveApprovalInput,
   UpdateAgentRunInput,
   UpdateTaskInput,
 } from './store'
@@ -36,6 +37,14 @@ import type {
 // per-instance and non-persistent by design.
 
 const now = () => new Date().toISOString()
+
+// Approval audit rows record a hash of the payload, never the payload
+// itself, so a secret inside an action argument cannot be read back out
+// of the audit log. Matches the encode(sha256(...), 'hex') the RPCs use.
+const sha256Of = (payload: unknown) =>
+  createHash('sha256')
+    .update(JSON.stringify(payload ?? {}))
+    .digest('hex')
 
 export interface InMemoryState {
   organizationId: string
@@ -291,7 +300,26 @@ export function createInMemoryStore(): JarvisStore & { state: InMemoryState } {
       )
     },
 
+    // Mirrors create_approval_audited: the approval, its audit row and
+    // its event appear together or not at all, and one request id can
+    // only ever produce one approval. The in-memory store models these
+    // invariants so tests written against it stay honest about what the
+    // database will actually do.
     async createApproval(input: CreateApprovalInput) {
+      if (!input.requestId) throw new Error('request_id_required')
+      if (!isRequestOrigin(input.origin)) throw new Error('invalid_request_origin')
+      if (input.requestedByUserId == null && input.requestedByAgentId == null) {
+        throw new Error('requester_required')
+      }
+
+      const prior = state.auditEvents.find(
+        (e) => e.action === 'approval.created' && e.request_id === input.requestId
+      )
+      if (prior) {
+        const existing = state.approvals.find((a) => a.id === prior.resource_id)
+        if (existing) return existing
+      }
+
       const approval: ApprovalRow = {
         id: randomUUID(),
         organization_id: input.organizationId,
@@ -314,6 +342,96 @@ export function createInMemoryStore(): JarvisStore & { state: InMemoryState } {
         updated_at: now(),
       }
       state.approvals.push(approval)
+      state.auditEvents.push({
+        organization_id: input.organizationId,
+        business_id: input.businessId ?? null,
+        actor_type: input.requestedByAgentId != null ? 'agent' : 'user',
+        actor_id: input.requestedByAgentId ?? input.requestedByUserId ?? null,
+        action: 'approval.created',
+        resource_type: 'approval',
+        resource_id: approval.id,
+        request_id: input.requestId,
+        before_data: null,
+        after_data: {
+          status: 'pending',
+          action_type: input.actionType,
+          risk_level: input.riskLevel,
+          estimated_cost: input.estimatedCost ?? null,
+          payload_sha256: sha256Of(input.actionPayload),
+        },
+        metadata: {
+          ...(input.metadata ?? {}),
+          reason: input.reason ?? null,
+          request_origin: input.origin,
+        },
+      })
+      state.systemEvents.push({
+        organizationId: input.organizationId,
+        businessId: input.businessId ?? null,
+        eventType: 'approval.requested',
+        payload: { approvalId: approval.id, actionType: input.actionType },
+        dedupeKey: approval.id,
+      })
+      return approval
+    },
+
+    // Mirrors resolve_approval: PRIME-only, optimistic concurrency, the
+    // shared transition matrix, and one audit row per request id.
+    async resolveApproval(input: ResolveApprovalInput) {
+      if (!input.requestId) throw new Error('request_id_required')
+      if (!isRequestOrigin(input.origin)) throw new Error('invalid_request_origin')
+
+      const approval = state.approvals.find((a) => a.id === input.approvalId)
+      if (!approval) throw new Error('approval_not_found')
+
+      const action = `approval.${input.resolution}`
+      const prior = state.auditEvents.find(
+        (e) =>
+          e.action === action &&
+          e.request_id === input.requestId &&
+          e.resource_id === input.approvalId
+      )
+      if (prior) return approval
+
+      if (approval.status !== input.expectedStatus) throw new Error('stale_status')
+      if (!approvalTransitionAllowed(approval.status, input.resolution, 'prime')) {
+        throw new Error('invalid_transition')
+      }
+
+      const before = approval.status
+      approval.status = input.resolution
+      approval.approved_by = input.actorId
+      approval.approved_at = now()
+      approval.updated_at = now()
+      if (input.resolution === 'modified' && input.modifiedPayload != null) {
+        approval.action_payload = input.modifiedPayload
+      }
+
+      state.auditEvents.push({
+        organization_id: approval.organization_id,
+        business_id: approval.business_id,
+        actor_type: 'user',
+        actor_id: input.actorId,
+        action,
+        resource_type: 'approval',
+        resource_id: approval.id,
+        request_id: input.requestId,
+        before_data: { status: before },
+        after_data: { status: input.resolution },
+        metadata: {
+          transition: `${before}->${input.resolution}`,
+          expected_status: input.expectedStatus,
+          action_type: approval.action_type,
+          request_origin: input.origin,
+        },
+      })
+      state.systemEvents.push({
+        organizationId: approval.organization_id,
+        businessId: approval.business_id,
+        eventType: action,
+        payload: { approvalId: approval.id, actionType: approval.action_type },
+        dedupeKey: `${approval.id}:${input.resolution}`,
+      })
       return approval
     },
 

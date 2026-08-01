@@ -3,13 +3,22 @@
 import { useState, useTransition } from 'react'
 import { resolveApproval } from '@/app/actions/approvals'
 
-export default function ApprovalActions({ approvalId }: { approvalId: string }) {
+export default function ApprovalActions({
+  approvalId,
+  // The status this list was rendered with. Sent back so the database
+  // can refuse the change if the approval moved in the meantime, rather
+  // than silently overwriting a decision made from another tab.
+  currentStatus = 'pending',
+}: {
+  approvalId: string
+  currentStatus?: 'pending' | 'approved' | 'modified'
+}) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
   const resolve = (resolution: 'approved' | 'rejected' | 'cancelled') =>
     startTransition(async () => {
-      const result = await resolveApproval(approvalId, resolution)
+      const result = await resolveApproval(approvalId, resolution, currentStatus)
       setError(result.error)
     })
 

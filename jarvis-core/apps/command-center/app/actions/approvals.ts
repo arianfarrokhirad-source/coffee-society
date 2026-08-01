@@ -1,77 +1,74 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { buildAuditEvent } from '@jarvis/security'
 import { getAuthContext } from '@/lib/auth'
 import { getStore } from '@/lib/jarvis'
-import { createUserClient } from '@/lib/supabase/server'
+import { describeRpcError, PRIME_RESOLUTIONS } from '@/lib/approval-transitions'
+import type { PrimeResolution } from '@/lib/approval-transitions'
 import type { ActionState } from './work'
 
-// Approval resolution. Only PRIME can approve/reject — enforced twice:
-// here (application check) and by RLS (approvals update policy is
-// PRIME-only), so a bug in one layer cannot bypass the other.
-// Phase 1 has no executors for external actions, so approving an
-// external action records the decision but executes nothing.
+// ---------------------------------------------------------------------
+// Approval resolution.
+//
+// The state change, its audit row and its domain event are written by
+// resolve_approval in a single database transaction. Nothing here
+// updates the approvals table: migration 0010 dropped the client write
+// policy, so this is the only path, and a failure part-way through rolls
+// back all three rather than leaving a decision with no record of who
+// made it.
+//
+// Authorization is still enforced twice. The isPrime check below is the
+// application layer; assert_org_prime inside the RPC re-derives it from
+// the database. Neither is removed because the other exists.
+//
+// Phase 1 has no executors, so approving an external action records the
+// decision and executes nothing.
+// ---------------------------------------------------------------------
+
+const schema = z.object({
+  approvalId: z.string().uuid(),
+  resolution: z.enum(PRIME_RESOLUTIONS),
+  // Optimistic concurrency. The caller states what it believes the
+  // current status to be; the database refuses the change if the record
+  // moved in between, rather than silently overwriting someone else.
+  expectedStatus: z.enum(['pending', 'approved', 'modified']).default('pending'),
+})
 
 export async function resolveApproval(
   approvalId: string,
-  resolution: 'approved' | 'rejected' | 'cancelled'
+  resolution: PrimeResolution,
+  expectedStatus: 'pending' | 'approved' | 'modified' = 'pending'
 ): Promise<ActionState> {
   const auth = await getAuthContext()
   if (!auth) return { error: 'Not authenticated.' }
   if (!auth.isPrime) return { error: 'Only PRIME can resolve approvals.' }
 
-  const parsed = z
-    .object({
-      approvalId: z.string().uuid(),
-      resolution: z.enum(['approved', 'rejected', 'cancelled']),
-    })
-    .safeParse({ approvalId, resolution })
+  const parsed = schema.safeParse({ approvalId, resolution, expectedStatus })
   if (!parsed.success) return { error: 'Invalid approval resolution.' }
 
-  const supabase = await createUserClient()
-  const { data: before } = await supabase
-    .from('approvals')
-    .select('id, status, action_type, business_id')
-    .eq('id', parsed.data.approvalId)
-    .maybeSingle()
-  if (!before) return { error: 'Approval not found.' }
-  if (before.status !== 'pending') return { error: `Approval is already ${before.status}.` }
-
-  const { error } = await supabase
-    .from('approvals')
-    .update({
-      status: parsed.data.resolution,
-      approved_by: auth.userId,
-      approved_at: new Date().toISOString(),
-    })
-    .eq('id', parsed.data.approvalId)
-    .eq('status', 'pending')
-  if (error) return { error: 'Could not update approval.' }
-
-  const store = getStore()
-  await store.writeAudit(
-    buildAuditEvent({
-      organizationId: auth.organizationId,
-      businessId: (before.business_id as string | null) ?? null,
-      actorType: 'user',
+  try {
+    await getStore().resolveApproval({
       actorId: auth.userId,
-      action: `approval.${parsed.data.resolution}`,
-      resourceType: 'approval',
-      resourceId: before.id as string,
-      beforeData: { status: 'pending' },
-      afterData: { status: parsed.data.resolution },
+      approvalId: parsed.data.approvalId,
+      expectedStatus: parsed.data.expectedStatus,
+      resolution: parsed.data.resolution,
+      // A fresh id per submission: this is a deliberate human decision,
+      // so a second click is a second decision to record, not a retry to
+      // collapse. The database still refuses a transition out of a
+      // status that has already moved, which is what makes the double
+      // click safe.
+      requestId: randomUUID(),
+      origin: 'web',
     })
-  )
-  if (auth.organizationId) {
-    await store.createSystemEvent({
-      organizationId: auth.organizationId,
-      eventType: `approval.${parsed.data.resolution}`,
-      payload: { approvalId: before.id, actionType: before.action_type },
-      dedupeKey: `${before.id}:${parsed.data.resolution}`,
-    })
+  } catch (error) {
+    // describeRpcError maps the database's reason identifier to a
+    // message; anything unrecognised becomes a generic string, so
+    // database internals never reach the browser.
+    return { error: describeRpcError(error instanceof Error ? error.message : null) }
   }
+
   revalidatePath('/approvals')
   return { error: null, ok: true }
 }

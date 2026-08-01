@@ -14,6 +14,7 @@ import type {
   RecordDecisionInput,
   RecordModelUsageInput,
   RecordToolCallInput,
+  ResolveApprovalInput,
   UpdateAgentRunInput,
   UpdateTaskInput,
 } from './store'
@@ -164,25 +165,60 @@ export function createSupabaseStore(service: SupabaseClient): JarvisStore {
       return must(data, error, 'listPendingApprovals') as ApprovalRow[]
     },
 
+    // Creation goes through create_approval_audited rather than a table
+    // insert: the approval row, its audit row and the approval.requested
+    // event are written in one transaction, so an approval can never
+    // exist without the record of who asked for it. The direct insert
+    // path was removed with the approvals_insert policy in 0010.
     async createApproval(input: CreateApprovalInput) {
-      const { data, error } = await service
+      const { data: approvalId, error } = await service.rpc('create_approval_audited', {
+        p_org: input.organizationId,
+        p_business: input.businessId ?? null,
+        p_requested_by_user: input.requestedByUserId ?? null,
+        p_requested_by_agent: input.requestedByAgentId ?? null,
+        p_action_type: input.actionType,
+        p_action_payload: input.actionPayload,
+        p_reason: input.reason ?? null,
+        p_estimated_cost: input.estimatedCost ?? null,
+        p_currency: input.currency ?? null,
+        p_risk_level: input.riskLevel,
+        p_expires_at: input.expiresAt ?? null,
+        p_request_id: input.requestId,
+        p_origin: input.origin,
+        p_metadata: input.metadata ?? {},
+      })
+      if (error) throw new Error(error.message)
+
+      const { data, error: readError } = await service
         .from('approvals')
-        .insert({
-          organization_id: input.organizationId,
-          business_id: input.businessId ?? null,
-          requested_by_agent_id: input.requestedByAgentId ?? null,
-          requested_by_user_id: input.requestedByUserId ?? null,
-          action_type: input.actionType,
-          action_payload: input.actionPayload,
-          reason: input.reason ?? null,
-          estimated_cost: input.estimatedCost ?? null,
-          currency: input.currency ?? null,
-          risk_level: input.riskLevel,
-          expires_at: input.expiresAt ?? null,
-        })
-        .select()
+        .select('*')
+        .eq('id', approvalId as string)
         .single()
-      return must(data, error, 'createApproval') as ApprovalRow
+      return must(data, readError, 'createApproval') as ApprovalRow
+    },
+
+    // resolve_approval owns the transition rules, the PRIME check, the
+    // optimistic-concurrency check and the audit write. This method
+    // deliberately adds none of its own: a second copy of the rules here
+    // would be a second thing to keep correct.
+    async resolveApproval(input: ResolveApprovalInput) {
+      const { error } = await service.rpc('resolve_approval', {
+        p_actor: input.actorId,
+        p_approval: input.approvalId,
+        p_expected_status: input.expectedStatus,
+        p_resolution: input.resolution,
+        p_request_id: input.requestId,
+        p_origin: input.origin,
+        p_modified_payload: input.modifiedPayload ?? null,
+      })
+      if (error) throw new Error(error.message)
+
+      const { data, error: readError } = await service
+        .from('approvals')
+        .select('*')
+        .eq('id', input.approvalId)
+        .single()
+      return must(data, readError, 'resolveApproval') as ApprovalRow
     },
 
     async searchDocuments(query: string, businessId?: string) {

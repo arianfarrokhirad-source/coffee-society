@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `454e6d8`. **Grep this file; do not read it whole.**
+Generated from commit `329a943`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -11,8 +11,8 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
 | `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 2 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 2 |
-| `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 0 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 3 |
+| `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |
 | `permissions` | `packages/permissions` | critical | changing | shared | command-center, workflows | 3 |
 | `reporting` | `packages/reporting` | ordinary | stable | database, shared | command-center, workflows | 2 |
@@ -98,6 +98,7 @@ graph LR
 - `supabase/migrations/0007_rls.sql` — `364c33374ed2`
 - `supabase/migrations/0008_forge_pilot.sql` — `1ca65ce1d3e9`
 - `supabase/migrations/0009_prime_bootstrap.sql` — `98f08332e6ec`
+- `supabase/migrations/0010_critical_auditing.sql` — `b0da83b22025`
 
 ## Security-critical files
 
@@ -109,8 +110,8 @@ graph LR
 | `packages/workflows/src/tools.ts` | critical | Tool enforcement pipeline; restricted actions must become approvals. | `packages/workflows/tests/tools.test.ts` |
 | `packages/workflows/src/orchestrator.ts` | critical | Acting-authority selection; agents must never inherit user authority. | `packages/workflows/tests/orchestrator.test.ts` |
 | `packages/workflows/src/classifier.ts` | sensitive | External-action detection must precede any model involvement. | `packages/workflows/tests/classifier.test.ts` |
-| `packages/security/src/audit.ts` | critical | Audit event construction with redaction before persistence. | `packages/security/tests/security.test.ts` |
-| `packages/security/src/redact.ts` | critical | Secret redaction for anything written to logs or audit. | `packages/security/tests/security.test.ts` |
+| `packages/security/src/audit.ts` | critical | Audit event construction with redaction before persistence. | `packages/database/tests/critical-audit.test.ts`<br>`packages/security/tests/security.test.ts` |
+| `packages/security/src/redact.ts` | critical | Secret redaction for anything written to logs or audit. | `packages/database/tests/critical-audit.test.ts`<br>`packages/security/tests/security.test.ts` |
 | `packages/security/src/constant-time.ts` | critical | Constant-time secret comparison without a length oracle. | `packages/security/tests/constant-time.test.ts` |
 | `packages/security/src/safe-error.ts` | critical | User-facing error surface; only PublicError messages may reach the browser. | `packages/security/tests/security.test.ts` |
 | `packages/security/src/rate-limit.ts` | sensitive | Rate limiting abstraction; in-memory implementation is temporary. | `packages/security/tests/security.test.ts` |
@@ -125,3 +126,6 @@ graph LR
 | `apps/command-center/app/actions/approvals.ts` | critical | PRIME-only approval transitions, dual-enforced with RLS. | `packages/permissions/tests/policy.test.ts` |
 | `supabase/migrations/0007_rls.sql` | critical | All RLS policies and helper functions. | `supabase/tests/rls_verification.sql` |
 | `supabase/migrations/0009_prime_bootstrap.sql` | critical | Claim RPC, nonce table, single-PRIME trigger. | `supabase/tests/prime_bootstrap_verification.sql`<br>`supabase/tests/race_prime_claim.sh` |
+| `supabase/migrations/0010_critical_auditing.sql` | critical | Atomic state+audit RPCs for every security-critical change; drops the direct write policies on approvals, memberships and agents. | `supabase/tests/critical_audit_verification.sql`<br>`supabase/tests/race_approval_transition.sh`<br>`supabase/tests/rls_verification.sql` |
+| `packages/shared/src/approval-transitions.ts` | critical | TypeScript mirror of the SQL transition matrix and the request_origin enumeration; must stay in parity with the database. | `apps/command-center/tests/approval-transitions.test.ts`<br>`supabase/tests/transition_parity.sh` |
+| `apps/command-center/lib/approval-transitions.ts` | critical | Maps RPC reason identifiers to user-facing messages; anything unrecognised must collapse to a generic string so database internals do not reach the browser. | `apps/command-center/tests/approval-transitions.test.ts` |

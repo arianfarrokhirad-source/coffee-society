@@ -115,7 +115,52 @@ describe('tool pipeline — enforcement', () => {
     expect(store.state.approvals[0]?.requested_by_agent_id).toBe(forgeAgentId)
     // the task was NOT modified
     expect(store.state.tasks[0]?.status).toBe('todo')
-    expect(store.state.auditEvents.some((e) => e.action === 'approval.requested')).toBe(true)
+
+    // The approval, its audit row and its event are written together by
+    // createApproval (create_approval_audited in the database), so the
+    // approval must never appear without all three. The audit action is
+    // approval.created; approval.requested is the domain event.
+    const audit = store.state.auditEvents.find((e) => e.action === 'approval.created')
+    expect(audit).toBeDefined()
+    expect(audit?.resource_id).toBe(store.state.approvals[0]?.id)
+    expect(audit?.request_id).toBeTruthy()
+    expect((audit?.metadata as Record<string, unknown>)?.request_origin).toBe('agent')
+    expect(
+      store.state.systemEvents.some(
+        (e) =>
+          e.eventType === 'approval.requested' &&
+          e.payload?.approvalId === store.state.approvals[0]?.id
+      )
+    ).toBe(true)
+
+    // The raw payload is hashed, never copied into the audit row.
+    expect((audit?.after_data as Record<string, unknown>)?.payload_sha256).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('two approvals in one request stay separate; an identical retry collapses', async () => {
+    const first = await store.createTask({
+      organizationId: store.state.organizationId,
+      businessId: forgeBusinessId,
+      title: 'first',
+    })
+    const second = await store.createTask({
+      organizationId: store.state.organizationId,
+      businessId: forgeBusinessId,
+      title: 'second',
+    })
+
+    // Same run (same ctx.requestId), two genuinely different calls: an
+    // idempotency key of only the request id would silently collapse the
+    // second into the first and lose an approval.
+    const ctx = agentCtx()
+    await executeTool(ctx, 'updateTask', { taskId: first.id, status: 'done' })
+    await executeTool(ctx, 'updateTask', { taskId: second.id, status: 'done' })
+    expect(store.state.approvals).toHaveLength(2)
+
+    // Replaying an identical call is a retry, and must not create a third.
+    await executeTool(ctx, 'updateTask', { taskId: first.id, status: 'done' })
+    expect(store.state.approvals).toHaveLength(2)
+    expect(store.state.auditEvents.filter((e) => e.action === 'approval.created')).toHaveLength(2)
   })
 
   it('an L0 user cannot create tasks (task.create requires L1) — approval is created', async () => {

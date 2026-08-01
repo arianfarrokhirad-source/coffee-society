@@ -7,7 +7,7 @@ Owner: PRIME
 
 # Current state
 
-**Read this first, every session.** Last updated: 2026-08-01, JEKS slice 2.
+**Read this first, every session.** Last updated: 2026-08-01, hardening commit 2.
 
 ## Where we are
 
@@ -17,17 +17,18 @@ Owner: PRIME
 | **Phase**                 | Phase 1.1 — Foundation Hardening                                   |
 | **Active branch**         | `claude/jarvis-phase-1-1-hardening` (PR #3)                        |
 | **Frozen baseline**       | `b4cd2f1` — tag `jarvis-phase-1-audit` (local; remote tag pending) |
-| **Last commit**           | JEKS slice 2 — manifest, generator, verifier                       |
-| **Last hardening commit** | `1cf3741` — commit 1/16: setup-token PRIME bootstrap               |
+| **Last commit**           | commit 2/16: fail-closed critical auditing                         |
+| **Last hardening commit** | commit 2/16 — fail-closed critical auditing (migration 0010)       |
 | **CI**                    | green on PR #1 (frozen baseline) and PR #3 (active)                |
 | **Deployed**              | no — never run against a live Supabase project                     |
 
 ## Work currently approved
 
-- **Phase 1.1 commit 2 — fail-closed critical auditing.** Design not yet
-  submitted; requires PRIME approval of the technical design before code.
-- Nothing else. JEKS Slices 1 and 2 are complete; the Vercel project rename to
-  `Farrokhirad` is done and deploying green.
+- **Nothing.** Commit 2 is implemented and validated; the checkpoint is with
+  PRIME. Commit 3 (scope foreign keys) requires a technical design and PRIME
+  approval before any code.
+- JEKS Slices 1 and 2 are complete; the Vercel project rename to `Farrokhirad`
+  is done and deploying green.
 
 ## Work currently prohibited
 
@@ -48,7 +49,7 @@ Owner: PRIME
 
 Hardening proceeds one commit at a time: technical design → PRIME approval →
 implement → validate → `HARDENING CHECKPOINT` → **stop** → approval. Commits
-are not batched. Sequence: 1 ✅ · 2 auth-audit · 3 scope FKs · 4 RLS perf ·
+are not batched. Sequence: 1 ✅ · 2 ✅ · 3 scope FKs · 4 RLS perf ·
 5 authz source · 6 definition dedup · 7 Supabase CLI + types · 8 events ·
 9 orchestrator split · 10 store segregation · 11 conversation memory ·
 12 AI budgets · 13 rate limit + webhooks · 14 observability · 15 cleanup ·
@@ -64,8 +65,7 @@ are not batched. Sequence: 1 ✅ · 2 auth-audit · 3 scope FKs · 4 RLS perf ·
 
 ## Required next approval
 
-1. Review of JEKS Slice 2 → then hardening resumes.
-2. Technical design for hardening commit 2 → then implementation.
+1. Review of hardening commit 2 → then commit 3 design.
 
 ## Validation commands
 
@@ -73,10 +73,13 @@ are not batched. Sequence: 1 ✅ · 2 auth-audit · 3 scope FKs · 4 RLS perf ·
 cd jarvis-core
 npm ci && npm run lint && npm run typecheck && npm run test && npm run build
 # database (fresh PostgreSQL 16 + Supabase-runtime harness):
-#   supabase/tests/local_harness.sql → migrations 0001-0009 → seed
+#   supabase/tests/local_harness.sql → migrations 0001-0010 → seed
 #   → supabase/tests/rls_verification.sql
 #   → supabase/tests/prime_bootstrap_verification.sql
+#   → supabase/tests/critical_audit_verification.sql
+#   → supabase/tests/transition_parity.sh
 #   → supabase/tests/race_prime_claim.sh
+#   → supabase/tests/race_approval_transition.sh
 npm run codebase:generate && npm run codebase:verify   # advisory until slice 3
 ```
 

@@ -25,6 +25,8 @@ describe('daily brief composition', () => {
       estimatedCost: 250,
       currency: 'EUR',
       riskLevel: 'high',
+      requestId: 'brief-test-approval-1',
+      origin: 'web',
     })
 
     const data = await store.getBriefData(orgId, '2026-08-01T00:00:00.000Z')
