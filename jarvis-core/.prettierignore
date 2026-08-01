@@ -5,3 +5,4 @@ package-lock.json
 *.tsbuildinfo
 docs/codebase/CATALOG.generated.md
 docs/codebase/MANIFEST.json
+docs/codebase/EVENT_CATALOG.generated.md

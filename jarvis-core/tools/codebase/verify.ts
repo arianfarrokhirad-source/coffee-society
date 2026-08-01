@@ -5,6 +5,7 @@ import { manifestSchema, type Manifest } from './manifest.schema.ts'
 import {
   ROOT,
   buildCatalog,
+  buildEventCatalog,
   buildManifest,
   collectConstantDefinitions,
   collectSeedDefinitions,
@@ -68,10 +69,16 @@ function checkStaleness(manifest: Manifest): void {
   if (strip(regenerated) !== strip(manifest)) {
     fail('staleness', 'MANIFEST.json is out of date — run `npm run codebase:generate`')
   }
-  const catalog = join(DOCS, 'CATALOG.generated.md')
-  if (!existsSync(catalog)) fail('staleness', 'CATALOG.generated.md missing')
-  else if (readFileSync(catalog, 'utf8') !== buildCatalog(manifest)) {
-    fail('staleness', 'CATALOG.generated.md is out of date — run `npm run codebase:generate`')
+  const generated: [string, (m: Manifest) => string][] = [
+    ['CATALOG.generated.md', buildCatalog],
+    ['EVENT_CATALOG.generated.md', buildEventCatalog],
+  ]
+  for (const [file, build] of generated) {
+    const path = join(DOCS, file)
+    if (!existsSync(path)) fail('staleness', `${file} missing`)
+    else if (readFileSync(path, 'utf8') !== build(manifest)) {
+      fail('staleness', `${file} is out of date — run \`npm run codebase:generate\``)
+    }
   }
 }
 
@@ -115,6 +122,71 @@ function checkDependencyRules(manifest: Manifest): void {
       fail('layering', `${module.name} must not depend on ${forbidden.join(', ')}`)
     }
   }
+}
+
+/** Every event found in code must carry human judgement. Fail closed. */
+function checkEventAnnotations(manifest: Manifest): void {
+  const unannotated = manifest.domainEvents.filter((e) => e.guarantee === 'unknown')
+  if (unannotated.length) {
+    fail(
+      'events',
+      `event(s) in code with no annotation in annotations.json: ${unannotated.map((e) => e.name).join(', ')}`
+    )
+  }
+  notes.push(
+    `events: ${manifest.domainEvents.length} discovered ` +
+      `(${manifest.domainEvents.filter((e) => e.securityClass === 'security_relevant').length} security-relevant)`
+  )
+}
+
+/** No circular dependencies between modules (engineering principle). */
+function checkNoCycles(manifest: Manifest): void {
+  const edges = new Map<string, string[]>()
+  for (const m of manifest.modules) edges.set(m.name, m.dependsOn)
+  const state = new Map<string, 'visiting' | 'done'>()
+  const cycles: string[] = []
+
+  const visit = (node: string, trail: string[]): void => {
+    if (state.get(node) === 'done') return
+    if (state.get(node) === 'visiting') {
+      cycles.push([...trail.slice(trail.indexOf(node)), node].join(' → '))
+      return
+    }
+    state.set(node, 'visiting')
+    for (const next of edges.get(node) ?? []) visit(next, [...trail, node])
+    state.set(node, 'done')
+  }
+  for (const name of edges.keys()) visit(name, [])
+  if (cycles.length) fail('cycles', `circular dependency: ${[...new Set(cycles)].join('; ')}`)
+}
+
+/** ADR references must resolve once decisions/ exists (JEKS slice 3). */
+function checkAdrLinks(): void {
+  const adrDir = join(DOCS, 'decisions')
+  const referenced = new Set<string>()
+  const docs = readdirSync(DOCS, { recursive: true, encoding: 'utf8' }).filter((f) =>
+    f.endsWith('.md')
+  )
+  for (const doc of docs) {
+    for (const m of readFileSync(join(DOCS, doc), 'utf8').matchAll(/\b(ADR-\d{4})[\w-]*/g)) {
+      referenced.add(m[1]!)
+    }
+  }
+  if (!existsSync(adrDir)) {
+    if (referenced.size) {
+      fail('adr', `${referenced.size} ADR reference(s) but docs/codebase/decisions/ does not exist`)
+    }
+    notes.push('adr: decisions/ not created yet (JEKS slice 3) — no ADR references found')
+    return
+  }
+  const present = new Set(
+    readdirSync(adrDir)
+      .filter((f) => f.startsWith('ADR-'))
+      .map((f) => f.slice(0, 8))
+  )
+  const missing = [...referenced].filter((id) => !present.has(id))
+  if (missing.length) fail('adr', `referenced ADR(s) with no file: ${missing.join(', ')}`)
+  notes.push(`adr: ${present.size} decision record(s), ${referenced.size} referenced`)
 }
 
 function checkDefinitionDrift(): void {
@@ -174,13 +246,13 @@ function checkEvolutionTriggers(): void {
     .filter((l) => l.startsWith('| ') && !l.startsWith('| ---') && !l.includes('Current choice'))
   const incomplete = rows.filter((row) => {
     const cells = row.split('|').map((c) => c.trim())
-    // | choice | why acceptable | trigger | candidate | cost | dependencies |
-    return cells.length < 7 || cells.slice(1, 7).some((c) => c === '' || c === '—' || c === 'TBD')
+    // | choice | reason | trigger | replacement | difficulty | dependencies | owner |
+    return cells.length < 8 || cells.slice(1, 8).some((c) => c === '' || c === '—' || c === 'TBD')
   })
   if (incomplete.length) {
     fail(
       'evolution',
-      `${incomplete.length} row(s) missing a trigger, candidate, cost or dependency`
+      `${incomplete.length} row(s) missing a reason, trigger, replacement, difficulty, dependency or owner`
     )
   }
   notes.push(`evolution: ${rows.length} tracked temporary decisions`)
@@ -209,7 +281,10 @@ function main(): void {
     checkStaleness(manifest)
     checkSecurityCoverage(manifest)
     checkDependencyRules(manifest)
+    checkNoCycles(manifest)
+    checkEventAnnotations(manifest)
   }
+  checkAdrLinks()
   checkDefinitionDrift()
   checkDocLinksAndBudgets()
   checkNoSecrets()

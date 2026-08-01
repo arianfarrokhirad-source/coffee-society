@@ -11,16 +11,18 @@ The permanent philosophy of JARVIS. Everything else — phases, commits,
 documents — is temporary; these are not. When a decision is contested, the
 principle wins over convenience, schedule and elegance.
 
-Each principle states the rule, what it means in practice, and what violating
-it looks like so it can be recognised in review.
+Each principle states the rule and what violating it looks like, so it can be
+recognised in review. Principles do not list current violations — those live in
+`ARCHITECTURE_EVOLUTION.md` (temporary decisions) and `SYSTEM_MAP.md` (known
+coupling).
 
 ### 1. One source of truth
 
 Every fact has exactly one authoritative home. Code is canonical for
 implementation, migrations for schema, generated types for DB types, the seed
 for definitions, `CURRENT_STATE.md` for project state.
-**Violation:** the same list maintained in three places (today: business and
-agent definitions in constants, seed and the in-memory store).
+**Violation:** the same list maintained in more than one place. Current
+instances live in `ARCHITECTURE_EVOLUTION.md`, not here.
 
 ### 2. Security before convenience
 
@@ -52,46 +54,59 @@ only the anon key.
 **Violation:** widening a grant "temporarily", or an agent acting at the
 requesting user's level.
 
-### 6. Two enforcement layers
+### 6. Every external action is auditable
+
+Anything leaving the system is reconstructable afterwards: who asked, who
+approved, what ran, what came back. An action that cannot be audited is an
+action that must not execute.
+**Violation:** a side effect with no run, tool-call or audit record behind it.
+
+### 7. Two enforcement layers
 
 Authorization is enforced in the application **and** in the database. Neither
 is removed because the other exists — a bug in one must not be sufficient.
 **Violation:** relying on an app-side check for something RLS should also deny.
 
-### 7. Kernel-first architecture
+### 8. The kernel owns permissions
+
+Authorization lives in the kernel and nowhere else. No extension, business
+module, integration or route re-implements, caches or reinterprets it.
+**Violation:** an extension deciding for itself what a caller may do.
+
+### 9. Kernel-first architecture
 
 Policy, identity, data access, audit, events and AI capability form the kernel.
 It is stable, extension-agnostic and never imports an extension.
 **Violation:** kernel code that knows a specific business exists.
 
-### 8. Businesses extend the kernel
+### 10. Businesses extend the kernel
 
 Business domains register against the kernel; they never import each other.
 Cross-business needs an explicit shared-service contract.
-**Violation:** FORGE importing SIGNAL, or business tables landing in kernel
-migrations (currently true for FORGE — tracked, not endorsed).
+**Violation:** one business importing another, or business tables landing in
+kernel migrations.
 
-### 9. Models have no permissions
+### 11. No hidden AI autonomy
 
-Application code decides what may happen. Model output is schema-validated and
+Models hold no permissions. Application code decides what may happen. Model output is schema-validated and
 advisory; authority is always re-derived server-side. Models never receive
 database or service-role access.
 **Violation:** letting a classification determine whether an action is allowed.
 
-### 10. Generate metadata whenever practical
+### 12. Generate metadata whenever practical
 
 Anything mechanically derivable — module lists, routes, tools, dependency
 graphs, checksums — is generated and marked generated. Hand-maintained
 catalogs rot.
 **Violation:** a hand-written list of files, or editing a generated file.
 
-### 11. Manual docs explain intent, not implementation
+### 13. Manual docs explain intent, not implementation
 
 Prose captures _why_, constraints and procedure. If a statement can be derived
 from code, it belongs in a generated artifact instead.
 **Violation:** documentation that restates what the code does, and drifts.
 
-### 12. Tests before architecture changes
+### 14. Tests before architecture changes
 
 Existing tests are behaviour pins: they stay green through a refactor, and new
 guarantees ship with new tests. Security-critical files list their required
@@ -99,21 +114,34 @@ tests explicitly.
 **Violation:** a refactor that changes tests and code in the same step so
 nothing pins the behaviour.
 
-### 13. Honest state over comfortable narrative
+### 15. Every major architectural decision requires an ADR
+
+Decisions that shape boundaries, security posture or data ownership are
+recorded as immutable decision records — context, alternatives, consequences,
+reversal strategy. Superseded, never edited.
+**Violation:** a boundary that changed with no record of who decided or why.
+
+### 16. Honest state over comfortable narrative
 
 Say what is implemented, partially implemented and not implemented. Never
 describe intended architecture as if it exists. Report failures with evidence;
 never claim verification that did not run.
-**Violation:** "tamper-proof" for an audit log that is only append-only; docs
-describing model-driven tool calling that is not wired up.
+**Violation:** claiming a guarantee stronger than the implementation provides,
+or documenting a capability that is not wired up.
 
-### 14. No undocumented shortcuts
+### 17. No undocumented shortcuts
 
 Temporary choices are permitted — unrecorded ones are not. Every shortcut goes
 into `ARCHITECTURE_EVOLUTION.md` with a replacement trigger.
 **Violation:** a `// TODO` standing in for a decision nobody can find later.
 
-### 15. Small, reversible, reviewable steps
+### 18. No circular dependencies
+
+Module dependencies form a directed acyclic graph, enforced mechanically by
+`codebase:verify`. Cycles make reasoning, testing and extraction impossible.
+**Violation:** two modules importing each other, directly or transitively.
+
+### 19. Small, reversible, reviewable steps
 
 One concern per commit, validated before the next begins. Prefer additive
 migrations and reversible changes; destructive operations require explicit

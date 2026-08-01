@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `36754cb`. **Grep this file; do not read it whole.**
+Generated from commit `454e6d8`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules

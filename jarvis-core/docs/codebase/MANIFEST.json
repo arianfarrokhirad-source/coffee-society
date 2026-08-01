@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-01T14:13:53.559Z",
-  "repositoryCommit": "36754cbce9a2b6f39e985addd47c31c56dbcc5cc",
+  "generatedAt": "2026-08-01T14:25:22.043Z",
+  "repositoryCommit": "454e6d81c15c399e079158840e132b5cd8086b6a",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -11,6 +11,7 @@
     "internalTools",
     "tests",
     "dependencyGraph",
+    "domainEvents (except consumers/guarantee/securityClass)",
     "repositoryCommit"
   ],
   "modules": [
@@ -841,5 +842,208 @@
     "businessAgentDefinitions": "supabase/seed/seed.sql (duplicated in shared/src/constants.ts and database/src/store-memory.ts until hardening commit 6)",
     "projectState": "docs/codebase/CURRENT_STATE.md",
     "decisions": "docs/codebase/decisions/ (JEKS slice 3)"
-  }
+  },
+  "domainEvents": [
+    {
+      "name": "agent.run.completed",
+      "kind": "system_event",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "agent.run.error",
+      "kind": "audit_action",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "agent.run.failed",
+      "kind": "system_event",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "agent.run.started",
+      "kind": "audit_action",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "approval.*",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/approvals.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "approval.requested",
+      "kind": "audit_action",
+      "producers": [
+        "packages/workflows/src/tools.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "auth.sign_in",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/auth.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "auth.sign_out",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/auth.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "auth.sign_up",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/auth.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "brief.generated",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/brief.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    {
+      "name": "brief.generated.cron",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/api/cron/daily-brief/route.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    {
+      "name": "daily_brief.requested",
+      "kind": "system_event",
+      "producers": [
+        "packages/reporting/src/brief.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    {
+      "name": "decision.recorded",
+      "kind": "system_event",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "objective.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "prime.claim_denied",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/auth.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "prime.claimed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0007_rls.sql",
+        "supabase/migrations/0009_prime_bootstrap.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "project.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "task.created",
+      "kind": "system_event",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "task.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "tool.executed",
+      "kind": "audit_action",
+      "producers": [
+        "packages/workflows/src/tools.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    }
+  ]
 }

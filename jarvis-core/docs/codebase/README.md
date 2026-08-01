@@ -54,19 +54,20 @@ changing code. It is what keeps a session inside its approved scope.
 
 ## Document index
 
-| Document                                                                                                           | Type      | Canonical for                                      |
-| ------------------------------------------------------------------------------------------------------------------ | --------- | -------------------------------------------------- |
-| `CURRENT_STATE.md`                                                                                                 | manual    | **yes** — project state, approvals, blockers       |
-| `SYSTEM_MAP.md`                                                                                                    | manual    | no — explains the kernel and boundaries            |
-| `GLOSSARY.md`                                                                                                      | manual    | no — term lookup                                   |
-| `context/*_CONTEXT.md`                                                                                             | manual    | no — per-domain working knowledge                  |
-| `context/TASK_TEMPLATE.md`                                                                                         | manual    | no — scope discipline                              |
-| `ENGINEERING_PRINCIPLES.md`                                                                                        | manual    | **yes** — engineering philosophy                   |
-| `ARCHITECTURE_EVOLUTION.md`                                                                                        | manual    | **yes** — temporary choices + replacement triggers |
-| `MANIFEST.json`                                                                                                    | generated | no — navigation metadata                           |
-| `CATALOG.generated.md`                                                                                             | generated | no — modules, routes, tools, dependency graph      |
-| `decisions/ADR-*.md`                                                                                               | manual    | **yes** — decision history _(Slice 3)_             |
-| `SECURITY_MAP.md`, `DATABASE_MAP.md`, `AI_RUNTIME_MAP.md`, `EVENT_CATALOG.generated.md`, `DEVELOPMENT_PLAYBOOK.md` | mixed     | _(Slice 3)_                                        |
+| Document                                                                             | Type      | Canonical for                                      |
+| ------------------------------------------------------------------------------------ | --------- | -------------------------------------------------- |
+| `CURRENT_STATE.md`                                                                   | manual    | **yes** — project state, approvals, blockers       |
+| `SYSTEM_MAP.md`                                                                      | manual    | no — explains the kernel and boundaries            |
+| `GLOSSARY.md`                                                                        | manual    | no — term lookup                                   |
+| `context/*_CONTEXT.md`                                                               | manual    | no — per-domain working knowledge                  |
+| `context/TASK_TEMPLATE.md`                                                           | manual    | no — scope discipline                              |
+| `ENGINEERING_PRINCIPLES.md`                                                          | manual    | **yes** — engineering philosophy                   |
+| `ARCHITECTURE_EVOLUTION.md`                                                          | manual    | **yes** — temporary choices + replacement triggers |
+| `MANIFEST.json`                                                                      | generated | no — navigation metadata                           |
+| `CATALOG.generated.md`                                                               | generated | no — modules, routes, tools, dependency graph      |
+| `decisions/ADR-*.md`                                                                 | manual    | **yes** — decision history _(Slice 3)_             |
+| `EVENT_CATALOG.generated.md`                                                         | generated | no — event producers, guarantees, security class   |
+| `SECURITY_MAP.md`, `DATABASE_MAP.md`, `AI_RUNTIME_MAP.md`, `DEVELOPMENT_PLAYBOOK.md` | mixed     | _(Slice 3)_                                        |
 
 ## Update contract
 
@@ -82,10 +83,23 @@ when to update it. Rules:
 - **Never describe desired architecture as if it exists.** Current reality
   first; intended direction explicitly labelled as such.
 
+**Avoid documentation churn.** Each document has exactly one trigger:
+
+| Document                    | Changes only when                                 |
+| --------------------------- | ------------------------------------------------- |
+| `CURRENT_STATE.md`          | project state changes (commit, approval, blocker) |
+| `SYSTEM_MAP.md`             | architecture changes                              |
+| `ARCHITECTURE_EVOLUTION.md` | a temporary architectural decision changes        |
+| `ENGINEERING_PRINCIPLES.md` | a principle is added or retired (rare)            |
+| `context/*`                 | that domain's rules, modules or invariants change |
+| generated files             | `npm run codebase:generate` — never by hand       |
+
+If a change does not match a trigger, do not touch the document.
+
 ## Tooling
 
 ```bash
-npm run codebase:generate   # rewrite MANIFEST.json + CATALOG.generated.md
+npm run codebase:generate   # rewrite MANIFEST.json + both generated catalogs
 npm run codebase:verify     # advisory checks (--strict to exit non-zero)
 ```
 
@@ -93,8 +107,10 @@ npm run codebase:verify     # advisory checks (--strict to exit non-zero)
 tests · generated files are not stale · security-shaped files are all
 classified · module dependencies obey `layerRules` · business/agent codes match
 between the seed and TypeScript constants · doc links resolve · context packets
-are within budget · no secret-shaped strings · every `ARCHITECTURE_EVOLUTION`
-row has all six cells · `CURRENT_STATE` commit references are real.
+are within budget · no secret-shaped strings · no circular module dependencies ·
+every event in code is annotated · referenced ADRs exist · every
+`ARCHITECTURE_EVOLUTION` row has all seven cells · `CURRENT_STATE` commit
+references are real.
 
 It verifies **structure, not truth**: green means paths resolve and generated
 content is fresh, not that the prose is accurate. Advisory until Slice 3 is

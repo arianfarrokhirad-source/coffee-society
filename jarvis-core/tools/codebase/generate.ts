@@ -171,6 +171,73 @@ export function collectConstantDefinitions(): { businesses: string[]; agents: st
   return { businesses: section('BUSINESS_CODES'), agents: section('AGENT_CODES') }
 }
 
+/**
+ * Domain events discovered in code: `system_events` writes and audit
+ * actions. Template-literal event names (e.g. `approval.${resolution}`) are
+ * normalised to a `prefix.*` pattern and annotated once. Guarantees,
+ * consumers and security class come from annotations — they cannot be
+ * derived mechanically.
+ */
+export function collectDomainEvents(annotations: Annotations): Manifest['domainEvents'] {
+  const sources = [
+    ...walk(join(ROOT, 'packages'), (p) => p.endsWith('.ts') && !p.includes('/tests/')),
+    ...walk(join(ROOT, 'apps'), (p) => p.endsWith('.ts') && !p.includes('/tests/')),
+  ]
+  const found = new Map<string, { kind: 'system_event' | 'audit_action'; producers: Set<string> }>()
+
+  const record = (name: string, kind: 'system_event' | 'audit_action', file: string) => {
+    const entry = found.get(name) ?? { kind, producers: new Set<string>() }
+    entry.producers.add(file)
+    found.set(name, entry)
+  }
+
+  // Event-shaped literal: dotted lowercase, e.g. task.created / agent.run.failed
+  const EVENT_NAME = /^[a-z_]+(?:\.[a-z_]+)+$/
+  /** Extract every event-shaped literal from an expression, so ternaries are covered. */
+  const literalsIn = (expression: string): string[] =>
+    [...expression.matchAll(/'([\w.]+)'/g)].map((m) => m[1]!).filter((v) => EVENT_NAME.test(v))
+
+  for (const file of sources) {
+    const source = readFileSync(file, 'utf8')
+    const path = rel(file)
+    // Property assignments, including multi-line ternaries (window of 3 lines).
+    for (const m of source.matchAll(/(eventType|action):((?:[^\n]*\n?){0,3})/g)) {
+      const kind = m[1] === 'eventType' ? 'system_event' : 'audit_action'
+      for (const name of literalsIn(m[2]!)) record(name, kind, path)
+      // Templates only on the property's own line, and only with a static
+      // prefix — otherwise unrelated templates nearby (e.g. dedupeKey) match.
+      for (const t of (m[2]!.split('\n')[0] ?? '').matchAll(/`([\w.]+?)\.?\$\{/g)) {
+        record(`${t[1]!.replace(/\.$/, '')}.*`, kind, path)
+      }
+    }
+    // Local audit helper calls, e.g. audit('objective.created', …)
+    for (const m of source.matchAll(/\baudit\('([\w.]+)'/g)) {
+      if (EVENT_NAME.test(m[1]!)) record(m[1]!, 'audit_action', path)
+    }
+  }
+
+  // Audit actions written from SQL (migrations insert into audit_logs directly).
+  for (const file of walk(join(ROOT, 'supabase/migrations'), (p) => p.endsWith('.sql'))) {
+    const source = readFileSync(file, 'utf8')
+    if (!source.includes('audit_logs')) continue
+    for (const name of literalsIn(source)) record(name, 'audit_action', rel(file))
+  }
+
+  return [...found.entries()]
+    .map(([name, entry]) => {
+      const note = annotations.events[name]
+      return {
+        name,
+        kind: entry.kind,
+        producers: [...entry.producers].sort(),
+        consumers: note?.consumers ?? [],
+        guarantee: note?.guarantee ?? ('unknown' as const),
+        securityClass: note?.securityClass ?? ('operational' as const),
+      }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export function collectTests(): string[] {
   return [
     ...walk(join(ROOT, 'packages'), (p) => p.endsWith('.test.ts')),
@@ -201,6 +268,7 @@ export function buildManifest(annotations: Annotations, generatedAt: string): Ma
       'internalTools',
       'tests',
       'dependencyGraph',
+      'domainEvents (except consumers/guarantee/securityClass)',
       'repositoryCommit',
     ],
     modules,
@@ -213,7 +281,58 @@ export function buildManifest(annotations: Annotations, generatedAt: string): Ma
     tests: collectTests(),
     dependencyGraph: modules.flatMap((m) => m.dependsOn.map((to) => ({ from: m.name, to }))),
     canonicalSources: annotations.canonicalSources,
+    domainEvents: collectDomainEvents(annotations),
   })
+}
+
+export function buildEventCatalog(manifest: Manifest): string {
+  const guarantee: Record<string, string> = {
+    atomic: 'atomic with state change',
+    best_effort: 'best effort',
+    unknown: '**unannotated**',
+  }
+  const section = (kind: 'system_event' | 'audit_action', title: string, note: string) => {
+    const rows = manifest.domainEvents.filter((e) => e.kind === kind)
+    return [
+      `## ${title}`,
+      '',
+      note,
+      '',
+      '| Event | Producers | Consumers | Delivery guarantee | Security class |',
+      '| --- | --- | --- | --- | --- |',
+      ...rows.map(
+        (e) =>
+          `| \`${e.name}\` | ${e.producers.map((p) => `\`${p}\``).join('<br>')} | ${
+            e.consumers.length ? e.consumers.join(', ') : 'none — recorded only'
+          } | ${guarantee[e.guarantee]} | ${e.securityClass.replace('_', '-')} |`
+      ),
+      '',
+    ]
+  }
+  return [
+    '<!-- GENERATED — do not edit by hand. Run: npm run codebase:generate -->',
+    '',
+    '# Event catalog (generated)',
+    '',
+    `Generated from commit \`${manifest.repositoryCommit.slice(0, 7)}\`. Event names and`,
+    'producers are discovered in source; consumers, delivery guarantee and security',
+    'class come from `tools/codebase/annotations.json` because they cannot be derived',
+    'mechanically. `codebase:verify` fails when an event in code has no annotation.',
+    '',
+    'Payload shapes are not duplicated here — see the producing call site and the',
+    '`system_events` / `audit_logs` columns in `supabase/migrations/0006_runs_audit.sql`.',
+    '',
+    ...section(
+      'system_event',
+      'System events',
+      'Written to `system_events`. Idempotent via `dedupe_key`. **No consumer exists yet** — the table is a recording seam, not a queue.'
+    ),
+    ...section(
+      'audit_action',
+      'Audit actions',
+      'Written to `audit_logs` (append-only). `atomic` means the row commits in the same transaction as its state change.'
+    ),
+  ].join('\n')
 }
 
 const short = (name: string) => name.replace('@jarvis/', '')
@@ -285,10 +404,12 @@ function main(): void {
   const manifest = buildManifest(annotations, new Date().toISOString())
   writeFileSync(join(DOCS, 'MANIFEST.json'), JSON.stringify(manifest, null, 2) + '\n')
   writeFileSync(join(DOCS, 'CATALOG.generated.md'), buildCatalog(manifest))
+  writeFileSync(join(DOCS, 'EVENT_CATALOG.generated.md'), buildEventCatalog(manifest))
   console.log(
-    `generated MANIFEST.json + CATALOG.generated.md — ${manifest.modules.length} modules, ` +
-      `${manifest.routes.length} routes, ${manifest.internalTools.length} tools, ` +
-      `${manifest.databaseMigrations.length} migrations, ${manifest.tests.length} test files`
+    `generated MANIFEST.json + CATALOG.generated.md + EVENT_CATALOG.generated.md — ` +
+      `${manifest.modules.length} modules, ${manifest.routes.length} routes, ` +
+      `${manifest.internalTools.length} tools, ${manifest.databaseMigrations.length} migrations, ` +
+      `${manifest.domainEvents.length} events, ${manifest.tests.length} test files`
   )
 }
 

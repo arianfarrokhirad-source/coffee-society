@@ -42,6 +42,17 @@ export const manifestSchema = z.object({
   tests: z.array(modulePath),
   dependencyGraph: z.array(z.object({ from: z.string(), to: z.string() })),
   canonicalSources: z.record(z.string(), z.string()),
+  domainEvents: z.array(
+    z.object({
+      name: z.string(),
+      kind: z.enum(['system_event', 'audit_action']),
+      producers: z.array(modulePath),
+      // manual annotation fields
+      consumers: z.array(z.string()),
+      guarantee: z.enum(['atomic', 'best_effort', 'unknown']),
+      securityClass: z.enum(['security_relevant', 'operational', 'telemetry']),
+    })
+  ),
 })
 
 export type Manifest = z.infer<typeof manifestSchema>
@@ -62,6 +73,15 @@ export const annotationsSchema = z.object({
   layerRules: z.record(z.string(), z.array(z.string())),
   /** Paths matching these globs must appear in securityCriticalFiles. */
   securityPathPatterns: z.array(z.string()),
+  /** Per-event judgement. Every event found in code must have an entry. */
+  events: z.record(
+    z.string(),
+    z.object({
+      consumers: z.array(z.string()),
+      guarantee: z.enum(['atomic', 'best_effort', 'unknown']),
+      securityClass: z.enum(['security_relevant', 'operational', 'telemetry']),
+    })
+  ),
 })
 
 export type Annotations = z.infer<typeof annotationsSchema>

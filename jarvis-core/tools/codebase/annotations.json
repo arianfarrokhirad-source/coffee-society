@@ -235,6 +235,118 @@
       "@jarvis/ui"
     ]
   },
+  "events": {
+    "prime.claimed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "prime.claim_denied": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "approval.requested": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "approval.*": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "auth.sign_in": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "auth.sign_up": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "auth.sign_out": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "permission.denied": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "tool.executed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "tool.failed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "agent.run.started": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "agent.run.completed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "agent.run.failed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "agent.run.error": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "task.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "decision.recorded": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "objective.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "project.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "task.status_changed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "daily_brief.requested": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    "brief.generated": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    "brief.generated.cron": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    }
+  },
   "securityPathPatterns": [
     "lib/auth",
     "lib/jarvis",
