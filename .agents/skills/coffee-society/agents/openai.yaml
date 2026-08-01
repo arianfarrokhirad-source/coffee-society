@@ -1,0 +1,6 @@
+interface:
+  display_name: "Coffee Society"
+  short_description: "Repo-specific patterns and workflows for coffee-society"
+  default_prompt: "Use the coffee-society repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
