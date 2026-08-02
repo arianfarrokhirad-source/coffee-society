@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-01T15:23:03.004Z",
-  "repositoryCommit": "329a943d64a49e899acaf19e22f97903d9d46305",
+  "generatedAt": "2026-08-02T13:18:22.124Z",
+  "repositoryCommit": "bf4ca8ea97aee8f25006dd3241d77775b38c9168",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -80,8 +80,10 @@
       "consumers": [],
       "tests": [
         "apps/command-center/tests/approval-transitions.test.ts",
+        "apps/command-center/tests/auth-errors.test.ts",
         "apps/command-center/tests/cron-auth.test.ts",
-        "apps/command-center/tests/prime-claim.test.ts"
+        "apps/command-center/tests/prime-claim.test.ts",
+        "apps/command-center/tests/registration.test.ts"
       ],
       "purpose": "Next.js App Router Command Centre: pages, server actions, API routes, auth middleware.",
       "securitySensitivity": "critical",
@@ -426,9 +428,10 @@
     {
       "path": "apps/command-center/middleware.ts",
       "class": "critical",
-      "concern": "Route gating and session refresh.",
+      "concern": "Route gating. /login and /register must be public; everything else authenticated.",
       "requiredTests": [
-        "apps/command-center/tests/cron-auth.test.ts"
+        "apps/command-center/tests/cron-auth.test.ts",
+        "apps/command-center/tests/registration.test.ts"
       ]
     },
     {
@@ -490,6 +493,39 @@
       "requiredTests": [
         "apps/command-center/tests/approval-transitions.test.ts"
       ]
+    },
+    {
+      "path": "supabase/migrations/0011_profile_identity.sql",
+      "class": "critical",
+      "concern": "Signup trigger hardened to empty search_path; safe parsing of client-controlled metadata so an optional field can never abort account creation; identity validation on insert and self-update.",
+      "requiredTests": [
+        "supabase/tests/registration_verification.sql"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/registration.ts",
+      "class": "critical",
+      "concern": "Registration validation and the signup-metadata boundary: passwords never leave the action and nothing privilege-bearing is offered to the database trigger.",
+      "requiredTests": [
+        "apps/command-center/tests/registration.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/app/actions/register.ts",
+      "class": "critical",
+      "concern": "Account creation. Must create an auth user and a profile and nothing else — no membership, role, permission or PRIME.",
+      "requiredTests": [
+        "apps/command-center/tests/registration.test.ts",
+        "supabase/tests/registration_verification.sql"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/auth-errors.ts",
+      "class": "critical",
+      "concern": "Maps Supabase auth failures to safe messages; surfaces the enum code but never the raw message.",
+      "requiredTests": [
+        "apps/command-center/tests/auth-errors.test.ts"
+      ]
     }
   ],
   "databaseMigrations": [
@@ -532,6 +568,10 @@
     {
       "path": "supabase/migrations/0010_critical_auditing.sql",
       "sha256": "b0da83b22025cf5b89911cdf6a04c62c6f1e9eeab73afa902eec68d339aa15ac"
+    },
+    {
+      "path": "supabase/migrations/0011_profile_identity.sql",
+      "sha256": "02ae3b6922be2c06c03e987e6f1b1a52d57015f7e980cf9e5498efe495bbbc2a"
     }
   ],
   "agents": [
@@ -686,6 +726,11 @@
       "kind": "page"
     },
     {
+      "route": "/register",
+      "path": "apps/command-center/app/register/page.tsx",
+      "kind": "page"
+    },
+    {
       "route": "/reports",
       "path": "apps/command-center/app/reports/page.tsx",
       "kind": "page"
@@ -745,8 +790,10 @@
   ],
   "tests": [
     "apps/command-center/tests/approval-transitions.test.ts",
+    "apps/command-center/tests/auth-errors.test.ts",
     "apps/command-center/tests/cron-auth.test.ts",
     "apps/command-center/tests/prime-claim.test.ts",
+    "apps/command-center/tests/registration.test.ts",
     "packages/ai/tests/router.test.ts",
     "packages/ai/tests/structured.test.ts",
     "packages/database/tests/critical-audit.test.ts",
@@ -767,6 +814,7 @@
     "supabase/tests/prime_bootstrap_verification.sql",
     "supabase/tests/race_approval_transition.sh",
     "supabase/tests/race_prime_claim.sh",
+    "supabase/tests/registration_verification.sql",
     "supabase/tests/rls_verification.sql",
     "supabase/tests/transition_parity.sh"
   ],
@@ -1009,16 +1057,6 @@
       "securityClass": "security_relevant"
     },
     {
-      "name": "auth.sign_in",
-      "kind": "audit_action",
-      "producers": [
-        "apps/command-center/app/actions/auth.ts"
-      ],
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "security_relevant"
-    },
-    {
       "name": "auth.sign_out",
       "kind": "audit_action",
       "producers": [
@@ -1032,7 +1070,7 @@
       "name": "auth.sign_up",
       "kind": "audit_action",
       "producers": [
-        "apps/command-center/app/actions/auth.ts"
+        "apps/command-center/app/actions/register.ts"
       ],
       "consumers": [],
       "guarantee": "best_effort",

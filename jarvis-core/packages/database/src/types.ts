@@ -38,6 +38,10 @@ export interface ProfileRow {
   id: string
   display_name: string | null
   email: string | null
+  /** Self-asserted, unverified E.164. Not valid for 2FA. */
+  phone: string | null
+  /** Birth date only — age is derived at read time, never stored. */
+  date_of_birth: string | null
   created_at: string
   updated_at: string
 }

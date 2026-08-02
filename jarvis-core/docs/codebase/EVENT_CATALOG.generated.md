@@ -2,7 +2,7 @@
 
 # Event catalog (generated)
 
-Generated from commit `329a943`. Event names and
+Generated from commit `bf4ca8e`. Event names and
 producers are discovered in source; consumers, delivery guarantee and security
 class come from `tools/codebase/annotations.json` because they cannot be derived
 mechanically. `codebase:verify` fails when an event in code has no annotation.
@@ -38,9 +38,8 @@ Written to `audit_logs` (append-only). `atomic` means the row commits in the sam
 | `agent.run.started` | `packages/workflows/src/orchestrator.ts` | none — recorded only | best effort | operational |
 | `approval.created` | `packages/database/src/store-memory.ts`<br>`supabase/migrations/0010_critical_auditing.sql` | none — recorded only | atomic with state change | security-relevant |
 | `approval.expired` | `supabase/migrations/0010_critical_auditing.sql` | none — recorded only | atomic with state change | security-relevant |
-| `auth.sign_in` | `apps/command-center/app/actions/auth.ts` | none — recorded only | best effort | security-relevant |
 | `auth.sign_out` | `apps/command-center/app/actions/auth.ts` | none — recorded only | best effort | security-relevant |
-| `auth.sign_up` | `apps/command-center/app/actions/auth.ts` | none — recorded only | best effort | security-relevant |
+| `auth.sign_up` | `apps/command-center/app/actions/register.ts` | none — recorded only | best effort | security-relevant |
 | `brief.generated` | `apps/command-center/app/actions/brief.ts` | none — recorded only | best effort | telemetry |
 | `brief.generated.cron` | `apps/command-center/app/api/cron/daily-brief/route.ts` | none — recorded only | best effort | telemetry |
 | `membership.created` | `supabase/migrations/0010_critical_auditing.sql` | none — recorded only | atomic with state change | security-relevant |

@@ -3,7 +3,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 type CookieItem = { name: string; value: string; options?: CookieOptions }
 
-const PUBLIC_PATHS = ['/login', '/api/cron/daily-brief']
+// /register MUST be here: the matcher below covers every non-static
+// path, so an unauthenticated visitor would otherwise be bounced to
+// /login and registration would be unreachable.
+const PUBLIC_PATHS = ['/login', '/register', '/api/cron/daily-brief']
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })

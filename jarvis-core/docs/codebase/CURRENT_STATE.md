@@ -19,6 +19,7 @@ Owner: PRIME
 | **Frozen baseline**       | `b4cd2f1` — tag `jarvis-phase-1-audit` (local; remote tag pending) |
 | **Last commit**           | commit 2/16: fail-closed critical auditing                         |
 | **Last hardening commit** | commit 2/16 — fail-closed critical auditing (migration 0010)       |
+| **Hotfix track**          | auth hotfix + registration flow (migrations through 0011)          |
 | **CI**                    | green on PR #1 (frozen baseline) and PR #3 (active)                |
 | **Deployed**              | no — never run against a live Supabase project                     |
 
@@ -27,6 +28,8 @@ Owner: PRIME
 - **Nothing.** Commit 2 is implemented and validated; the checkpoint is with
   PRIME. Commit 3 (scope foreign keys) requires a technical design and PRIME
   approval before any code.
+- The auth hotfix track (dedicated `/register`, migration 0011) is approved and
+  complete; it runs alongside hardening and does not consume a commit slot.
 - JEKS Slices 1 and 2 are complete; the Vercel project rename to `Farrokhirad`
   is done and deploying green.
 
@@ -49,7 +52,11 @@ Owner: PRIME
 
 Hardening proceeds one commit at a time: technical design → PRIME approval →
 implement → validate → `HARDENING CHECKPOINT` → **stop** → approval. Commits
-are not batched. Sequence: 1 ✅ · 2 ✅ · 3 scope FKs · 4 RLS perf ·
+are not batched.
+
+**Migration numbering.** The hotfix track took `0011_profile_identity.sql`, so
+**commit 3's scope-integrity migration is `0012`, not `0011`.** Migrations are
+numbered in application order across both tracks, not per track. Sequence: 1 ✅ · 2 ✅ · 3 scope FKs · 4 RLS perf ·
 5 authz source · 6 definition dedup · 7 Supabase CLI + types · 8 events ·
 9 orchestrator split · 10 store segregation · 11 conversation memory ·
 12 AI budgets · 13 rate limit + webhooks · 14 observability · 15 cleanup ·
@@ -73,11 +80,12 @@ are not batched. Sequence: 1 ✅ · 2 ✅ · 3 scope FKs · 4 RLS perf ·
 cd jarvis-core
 npm ci && npm run lint && npm run typecheck && npm run test && npm run build
 # database (fresh PostgreSQL 16 + Supabase-runtime harness):
-#   supabase/tests/local_harness.sql → migrations 0001-0010 → seed
+#   supabase/tests/local_harness.sql → migrations 0001-0011 → seed
 #   → supabase/tests/rls_verification.sql
 #   → supabase/tests/prime_bootstrap_verification.sql
 #   → supabase/tests/critical_audit_verification.sql
 #   → supabase/tests/transition_parity.sh
+#   → supabase/tests/registration_verification.sql
 #   → supabase/tests/race_prime_claim.sh
 #   → supabase/tests/race_approval_transition.sh
 npm run codebase:generate && npm run codebase:verify   # advisory until slice 3

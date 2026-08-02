@@ -8,7 +8,7 @@ import { createServiceClient } from '@jarvis/database'
 import { buildAuditEvent, sha256Hex } from '@jarvis/security'
 import { getStore } from '@/lib/jarvis'
 import { createUserClient } from '@/lib/supabase/server'
-import { describeAuthFailure, explainAuthError, isObfuscatedExistingUser } from '@/lib/auth-errors'
+import { describeAuthFailure, explainAuthError } from '@/lib/auth-errors'
 import {
   claimWindowStart,
   GENERIC_CLAIM_ERROR,
@@ -78,44 +78,6 @@ export async function signIn(_prev: AuthFormState, formData: FormData): Promise<
 
   await recordAuthTelemetry('auth.sign_in', data.user.id)
   redirect('/executive')
-}
-
-export async function signUp(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const email = typeof formData.get('email') === 'string' ? String(formData.get('email')) : ''
-  const parsed = credentialsSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
-  })
-  if (!parsed.success) {
-    return { error: 'Enter a valid email and a password of at least 10 characters.', email }
-  }
-
-  const supabase = await createUserClient()
-  const { data, error } = await supabase.auth.signUp(parsed.data)
-  if (error) return { error: explainAuthError(error).message, email }
-
-  await recordAuthTelemetry('auth.sign_up', data.user?.id ?? null)
-
-  // Confirmation disabled: a session is issued immediately.
-  if (data.session) redirect('/executive')
-
-  // Confirmation enabled for an address that already exists: Supabase
-  // returns a user with no identities rather than admitting the account
-  // exists. Do not contradict that — the instruction is the same either
-  // way, and enumeration stays closed.
-  if (isObfuscatedExistingUser(data.user)) {
-    return {
-      error: null,
-      notice: 'Check your inbox to confirm this address, then sign in.',
-      email,
-    }
-  }
-
-  return {
-    error: null,
-    notice: 'Account created. Confirm your email if prompted, then sign in.',
-    email,
-  }
 }
 
 export async function signOut(): Promise<void> {

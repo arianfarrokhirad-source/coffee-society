@@ -30,24 +30,25 @@ security-relevant, it is — read this.
 
 ## Security-critical files (change ⇒ tests below must pass)
 
-| File                                                  | Concern                         | Required tests                                                    |
-| ----------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
-| `packages/permissions/src/policy.ts`                  | authority + approval gating     | `packages/permissions/tests/policy.test.ts`                       |
-| `packages/permissions/src/authority.ts`               | L0–L5 comparison                | `…/tests/authority.test.ts`                                       |
-| `packages/permissions/src/agent-scope.ts`             | agent containment               | `…/tests/agent-scope.test.ts`                                     |
-| `packages/workflows/src/tools.ts`                     | enforcement pipeline            | `packages/workflows/tests/tools.test.ts`                          |
-| `packages/security/src/{audit,redact}.ts`             | audit + secret redaction        | `packages/security/tests/security.test.ts`                        |
-| `packages/security/src/constant-time.ts`              | secret comparison               | `packages/security/tests/constant-time.test.ts`                   |
-| `packages/database/src/clients.ts`                    | service-role construction       | build must fail if imported client-side                           |
-| `apps/command-center/lib/prime-claim.ts`              | PRIME bootstrap logic           | `apps/command-center/tests/prime-claim.test.ts`                   |
-| `apps/command-center/lib/cron-auth.ts`                | cron bearer check               | `apps/command-center/tests/cron-auth.test.ts`                     |
-| `apps/command-center/app/actions/{auth,approvals}.ts` | claim + approval transitions    | SQL suites below                                                  |
-| `apps/command-center/lib/approval-transitions.ts`     | RPC error mapping (no leaks)    | `apps/command-center/tests/approval-transitions.test.ts`          |
-| `packages/shared/src/approval-transitions.ts`         | transition matrix mirror        | `…/approval-transitions.test.ts` + `transition_parity.sh`         |
-| `apps/command-center/middleware.ts`                   | route gating                    | manual: unauthenticated → 307 `/login`                            |
-| `supabase/migrations/0007_rls.sql`                    | RLS policies                    | `supabase/tests/rls_verification.sql`                             |
-| `supabase/migrations/0009_prime_bootstrap.sql`        | claim RPC, single-PRIME trigger | `prime_bootstrap_verification.sql` + `race_prime_claim.sh`        |
-| `supabase/migrations/0010_critical_auditing.sql`      | atomic critical audit RPCs      | `critical_audit_verification.sql` + `race_approval_transition.sh` |
+| File                                                  | Concern                          | Required tests                                                    |
+| ----------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------- |
+| `packages/permissions/src/policy.ts`                  | authority + approval gating      | `packages/permissions/tests/policy.test.ts`                       |
+| `packages/permissions/src/authority.ts`               | L0–L5 comparison                 | `…/tests/authority.test.ts`                                       |
+| `packages/permissions/src/agent-scope.ts`             | agent containment                | `…/tests/agent-scope.test.ts`                                     |
+| `packages/workflows/src/tools.ts`                     | enforcement pipeline             | `packages/workflows/tests/tools.test.ts`                          |
+| `packages/security/src/{audit,redact}.ts`             | audit + secret redaction         | `packages/security/tests/security.test.ts`                        |
+| `packages/security/src/constant-time.ts`              | secret comparison                | `packages/security/tests/constant-time.test.ts`                   |
+| `packages/database/src/clients.ts`                    | service-role construction        | build must fail if imported client-side                           |
+| `apps/command-center/lib/prime-claim.ts`              | PRIME bootstrap logic            | `apps/command-center/tests/prime-claim.test.ts`                   |
+| `apps/command-center/lib/cron-auth.ts`                | cron bearer check                | `apps/command-center/tests/cron-auth.test.ts`                     |
+| `apps/command-center/app/actions/{auth,approvals}.ts` | claim + approval transitions     | SQL suites below                                                  |
+| `apps/command-center/lib/approval-transitions.ts`     | RPC error mapping (no leaks)     | `apps/command-center/tests/approval-transitions.test.ts`          |
+| `packages/shared/src/approval-transitions.ts`         | transition matrix mirror         | `…/approval-transitions.test.ts` + `transition_parity.sh`         |
+| `apps/command-center/middleware.ts`                   | route gating                     | manual: unauthenticated → 307 `/login`                            |
+| `supabase/migrations/0007_rls.sql`                    | RLS policies                     | `supabase/tests/rls_verification.sql`                             |
+| `supabase/migrations/0009_prime_bootstrap.sql`        | claim RPC, single-PRIME trigger  | `prime_bootstrap_verification.sql` + `race_prime_claim.sh`        |
+| `supabase/migrations/0010_critical_auditing.sql`      | atomic critical audit RPCs       | `critical_audit_verification.sql` + `race_approval_transition.sh` |
+| `supabase/migrations/0011_profile_identity.sql`       | signup trigger + identity fields | `supabase/tests/registration_verification.sql`                    |
 
 ## PRIME bootstrap (implemented, commit 1)
 
@@ -94,6 +95,34 @@ reaching it needs a second active PRIME as actor, which 0009's single-PRIME
 trigger forbids, and a PRIME cannot act on its own row. It is retained for when
 delegated administration makes it reachable. Check 15 of
 `critical_audit_verification.sql` pins that composition.
+
+## Identity data lives in Supabase only
+
+Supabase is the authoritative and **only** store for identity data. The
+memory architecture is fixed:
+
+- **Graph memory** — JARVIS operational and temporal memory
+- **Obsidian vault** — reviewed Farrokhirad human knowledge
+- **Supabase** — authoritative transactional and identity state
+
+Never write to graph memory (Graphiti, Graphify) or the Obsidian vault:
+passwords, authentication tokens, session cookies, phone numbers, birth
+dates, names, or any other identity data. The derived layers are
+advisory and must never be an authorization input — authority is
+re-derived from Supabase on every request.
+
+Never log or audit: display/full name · phone · date of birth ·
+passwords · confirmation passwords · auth tokens · session cookies.
+`redactSecrets` covers these key names as **defence in depth**; the
+control is not putting them in a payload in the first place.
+
+Age is never stored. `date_of_birth` is the only birth datum and age is
+derived at read time (`calculateAge`). A generated column cannot do this:
+`GENERATED ALWAYS AS` requires an `IMMUTABLE` expression.
+
+`profiles.phone` is **self-asserted and unverified**. It must not be
+treated as a verified factor for 2FA or account recovery without a
+separate verification flow.
 
 ## Audit terminology — use exactly these words
 

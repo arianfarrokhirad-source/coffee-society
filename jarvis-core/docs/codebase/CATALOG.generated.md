@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `329a943`. **Grep this file; do not read it whole.**
+Generated from commit `bf4ca8e`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -11,7 +11,7 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
 | `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 2 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 3 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 5 |
 | `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |
 | `permissions` | `packages/permissions` | critical | changing | shared | command-center, workflows | 3 |
@@ -71,6 +71,7 @@ graph LR
 | `/login` | page | `apps/command-center/app/login/page.tsx` |
 | `/objectives` | page | `apps/command-center/app/objectives/page.tsx` |
 | `/projects` | page | `apps/command-center/app/projects/page.tsx` |
+| `/register` | page | `apps/command-center/app/register/page.tsx` |
 | `/reports` | page | `apps/command-center/app/reports/page.tsx` |
 | `/settings` | page | `apps/command-center/app/settings/page.tsx` |
 | `/tasks` | page | `apps/command-center/app/tasks/page.tsx` |
@@ -99,6 +100,7 @@ graph LR
 - `supabase/migrations/0008_forge_pilot.sql` — `1ca65ce1d3e9`
 - `supabase/migrations/0009_prime_bootstrap.sql` — `98f08332e6ec`
 - `supabase/migrations/0010_critical_auditing.sql` — `b0da83b22025`
+- `supabase/migrations/0011_profile_identity.sql` — `02ae3b6922be`
 
 ## Security-critical files
 
@@ -121,7 +123,7 @@ graph LR
 | `apps/command-center/lib/cron-auth.ts` | critical | Constant-time bearer check for the scheduled endpoint. | `apps/command-center/tests/cron-auth.test.ts` |
 | `apps/command-center/lib/auth.ts` | critical | Identity and membership resolution via the RLS-scoped client. | `apps/command-center/tests/prime-claim.test.ts` |
 | `apps/command-center/lib/jarvis.ts` | critical | Server-only service-role singletons; imports server-only. | `apps/command-center/tests/cron-auth.test.ts` |
-| `apps/command-center/middleware.ts` | critical | Route gating and session refresh. | `apps/command-center/tests/cron-auth.test.ts` |
+| `apps/command-center/middleware.ts` | critical | Route gating. /login and /register must be public; everything else authenticated. | `apps/command-center/tests/cron-auth.test.ts`<br>`apps/command-center/tests/registration.test.ts` |
 | `apps/command-center/app/actions/auth.ts` | critical | Sign-in/up/out and the PRIME claim flow. | `apps/command-center/tests/prime-claim.test.ts` |
 | `apps/command-center/app/actions/approvals.ts` | critical | PRIME-only approval transitions, dual-enforced with RLS. | `packages/permissions/tests/policy.test.ts` |
 | `supabase/migrations/0007_rls.sql` | critical | All RLS policies and helper functions. | `supabase/tests/rls_verification.sql` |
@@ -129,3 +131,7 @@ graph LR
 | `supabase/migrations/0010_critical_auditing.sql` | critical | Atomic state+audit RPCs for every security-critical change; drops the direct write policies on approvals, memberships and agents. | `supabase/tests/critical_audit_verification.sql`<br>`supabase/tests/race_approval_transition.sh`<br>`supabase/tests/rls_verification.sql` |
 | `packages/shared/src/approval-transitions.ts` | critical | TypeScript mirror of the SQL transition matrix and the request_origin enumeration; must stay in parity with the database. | `apps/command-center/tests/approval-transitions.test.ts`<br>`supabase/tests/transition_parity.sh` |
 | `apps/command-center/lib/approval-transitions.ts` | critical | Maps RPC reason identifiers to user-facing messages; anything unrecognised must collapse to a generic string so database internals do not reach the browser. | `apps/command-center/tests/approval-transitions.test.ts` |
+| `supabase/migrations/0011_profile_identity.sql` | critical | Signup trigger hardened to empty search_path; safe parsing of client-controlled metadata so an optional field can never abort account creation; identity validation on insert and self-update. | `supabase/tests/registration_verification.sql` |
+| `apps/command-center/lib/registration.ts` | critical | Registration validation and the signup-metadata boundary: passwords never leave the action and nothing privilege-bearing is offered to the database trigger. | `apps/command-center/tests/registration.test.ts` |
+| `apps/command-center/app/actions/register.ts` | critical | Account creation. Must create an auth user and a profile and nothing else — no membership, role, permission or PRIME. | `apps/command-center/tests/registration.test.ts`<br>`supabase/tests/registration_verification.sql` |
+| `apps/command-center/lib/auth-errors.ts` | critical | Maps Supabase auth failures to safe messages; surfaces the enum code but never the raw message. | `apps/command-center/tests/auth-errors.test.ts` |

@@ -199,9 +199,10 @@
     {
       "path": "apps/command-center/middleware.ts",
       "class": "critical",
-      "concern": "Route gating and session refresh.",
+      "concern": "Route gating. /login and /register must be public; everything else authenticated.",
       "requiredTests": [
-        "apps/command-center/tests/cron-auth.test.ts"
+        "apps/command-center/tests/cron-auth.test.ts",
+        "apps/command-center/tests/registration.test.ts"
       ]
     },
     {
@@ -262,6 +263,39 @@
       "concern": "Maps RPC reason identifiers to user-facing messages; anything unrecognised must collapse to a generic string so database internals do not reach the browser.",
       "requiredTests": [
         "apps/command-center/tests/approval-transitions.test.ts"
+      ]
+    },
+    {
+      "path": "supabase/migrations/0011_profile_identity.sql",
+      "class": "critical",
+      "concern": "Signup trigger hardened to empty search_path; safe parsing of client-controlled metadata so an optional field can never abort account creation; identity validation on insert and self-update.",
+      "requiredTests": [
+        "supabase/tests/registration_verification.sql"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/registration.ts",
+      "class": "critical",
+      "concern": "Registration validation and the signup-metadata boundary: passwords never leave the action and nothing privilege-bearing is offered to the database trigger.",
+      "requiredTests": [
+        "apps/command-center/tests/registration.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/app/actions/register.ts",
+      "class": "critical",
+      "concern": "Account creation. Must create an auth user and a profile and nothing else \u2014 no membership, role, permission or PRIME.",
+      "requiredTests": [
+        "apps/command-center/tests/registration.test.ts",
+        "supabase/tests/registration_verification.sql"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/auth-errors.ts",
+      "class": "critical",
+      "concern": "Maps Supabase auth failures to safe messages; surfaces the enum code but never the raw message.",
+      "requiredTests": [
+        "apps/command-center/tests/auth-errors.test.ts"
       ]
     }
   ],
@@ -528,6 +562,9 @@
     "_rls.sql",
     "_prime_bootstrap.sql",
     "_critical_auditing.sql",
-    "approval-transitions"
+    "approval-transitions",
+    "_profile_identity.sql",
+    "lib/registration",
+    "actions/register"
   ]
 }
