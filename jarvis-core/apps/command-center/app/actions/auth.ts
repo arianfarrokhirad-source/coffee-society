@@ -8,6 +8,7 @@ import { createServiceClient } from '@jarvis/database'
 import { buildAuditEvent, sha256Hex } from '@jarvis/security'
 import { getStore } from '@/lib/jarvis'
 import { createUserClient } from '@/lib/supabase/server'
+import { describeAuthFailure, explainAuthError, isObfuscatedExistingUser } from '@/lib/auth-errors'
 import {
   claimWindowStart,
   GENERIC_CLAIM_ERROR,
@@ -24,51 +25,97 @@ const credentialsSchema = z.object({
 
 export interface AuthFormState {
   error: string | null
+  /** Success/instructional text. Never rendered as a failure. */
+  notice?: string | null
+  /** Echoed back so an error does not wipe what the user typed. */
+  email?: string | null
+}
+
+/**
+ * Auth telemetry is best-effort and must never be able to fail an
+ * authentication that already succeeded.
+ *
+ * `getStore()` constructs the service-role client eagerly and THROWS
+ * when SUPABASE_SERVICE_ROLE_KEY is absent or malformed. Previously that
+ * throw happened after signInWithPassword had already set the session
+ * cookie, so a telemetry misconfiguration surfaced as "sign-in silently
+ * does nothing" — the user was authenticated but the action threw
+ * before redirecting. `auth.sign_in` is a TELEMETRY action, not a
+ * critical one (see CRITICAL_AUDIT_ACTIONS in @jarvis/security): losing
+ * it is an observability gap, not a governance failure.
+ */
+async function recordAuthTelemetry(action: string, actorId: string | null): Promise<void> {
+  try {
+    await getStore().writeAudit(buildAuditEvent({ actorType: 'user', actorId, action }))
+  } catch (cause) {
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        event: 'auth.telemetry_failed',
+        action,
+        reason: cause instanceof Error ? cause.message : 'unknown',
+      })
+    )
+  }
 }
 
 export async function signIn(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const email = typeof formData.get('email') === 'string' ? String(formData.get('email')) : ''
   const parsed = credentialsSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
   })
-  if (!parsed.success)
-    return { error: 'Enter a valid email and a password of at least 10 characters.' }
+  if (!parsed.success) {
+    return { error: 'Enter a valid email and a password of at least 10 characters.', email }
+  }
 
   const supabase = await createUserClient()
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data)
-  if (error || !data.user) {
-    return { error: 'Sign in failed. Check your credentials.' }
+  if (error) return { error: explainAuthError(error).message, email }
+  if (!data.user) {
+    return { error: describeAuthFailure('unknown'), email }
   }
-  await getStore().writeAudit(
-    buildAuditEvent({
-      actorType: 'user',
-      actorId: data.user.id,
-      action: 'auth.sign_in',
-    })
-  )
+
+  await recordAuthTelemetry('auth.sign_in', data.user.id)
   redirect('/executive')
 }
 
 export async function signUp(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const email = typeof formData.get('email') === 'string' ? String(formData.get('email')) : ''
   const parsed = credentialsSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
   })
-  if (!parsed.success)
-    return { error: 'Enter a valid email and a password of at least 10 characters.' }
+  if (!parsed.success) {
+    return { error: 'Enter a valid email and a password of at least 10 characters.', email }
+  }
 
   const supabase = await createUserClient()
   const { data, error } = await supabase.auth.signUp(parsed.data)
-  if (error) return { error: 'Sign up failed. The email may already be registered.' }
-  await getStore().writeAudit(
-    buildAuditEvent({
-      actorType: 'user',
-      actorId: data.user?.id ?? null,
-      action: 'auth.sign_up',
-    })
-  )
+  if (error) return { error: explainAuthError(error).message, email }
+
+  await recordAuthTelemetry('auth.sign_up', data.user?.id ?? null)
+
+  // Confirmation disabled: a session is issued immediately.
   if (data.session) redirect('/executive')
-  return { error: 'Account created. If email confirmation is enabled, confirm before signing in.' }
+
+  // Confirmation enabled for an address that already exists: Supabase
+  // returns a user with no identities rather than admitting the account
+  // exists. Do not contradict that — the instruction is the same either
+  // way, and enumeration stays closed.
+  if (isObfuscatedExistingUser(data.user)) {
+    return {
+      error: null,
+      notice: 'Check your inbox to confirm this address, then sign in.',
+      email,
+    }
+  }
+
+  return {
+    error: null,
+    notice: 'Account created. Confirm your email if prompted, then sign in.',
+    email,
+  }
 }
 
 export async function signOut(): Promise<void> {
