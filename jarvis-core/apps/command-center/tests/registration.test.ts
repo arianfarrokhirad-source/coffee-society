@@ -275,3 +275,71 @@ describe('phone remains unverified', () => {
     expect(sql).toMatch(/UNVERIFIED/)
   })
 })
+
+describe('registration wiring', () => {
+  it('binds the /register form to register(), not signIn or signUp', () => {
+    const page = code('app', 'register', 'page.tsx')
+    expect(page).toContain("from '@/app/actions/register'")
+    expect(page).toMatch(/useActionState\(\s*register\s*,/)
+    expect(page).toContain('<form action={action}')
+    expect(page).not.toContain('signIn')
+    expect(page).not.toContain('signInWithPassword')
+    expect(page).not.toContain('formAction')
+  })
+
+  it('calls supabase.auth.signUp exactly once and never signInWithPassword', () => {
+    const action = code('app', 'actions', 'register.ts')
+    expect(action.match(/supabase\.auth\.signUp\(/g)).toHaveLength(1)
+    expect(action).not.toContain('signInWithPassword')
+    expect(action).not.toContain('auth.signInWithOtp')
+    expect(action).not.toContain('auth.setSession')
+  })
+
+  it('does not sign in after signup — the session only comes from signUp itself', () => {
+    const action = code('app', 'actions', 'register.ts')
+    // The only redirect is guarded by a session Supabase already returned.
+    expect(action).toMatch(/if \(data\.session\) redirect\('\/executive'\)/)
+    expect(action.match(/redirect\(/g)).toHaveLength(1)
+  })
+
+  it('classifies its Supabase errors as sign_up, never as sign-in', () => {
+    const action = code('app', 'actions', 'register.ts')
+    expect(action).toContain("explainAuthError(error, 'sign_up')")
+    expect(action).not.toMatch(/explainAuthError\(\s*error\s*\)/)
+  })
+
+  it('keeps sign-in classification on the sign-in path', () => {
+    expect(code('app', 'actions', 'auth.ts')).toContain("explainAuthError(error, 'sign_in')")
+  })
+
+  it('reads every field under the name the form posts', () => {
+    const page = read('app', 'register', 'page.tsx')
+    const action = code('app', 'actions', 'register.ts')
+    for (const name of [
+      'displayName',
+      'email',
+      'password',
+      'confirmPassword',
+      'phone',
+      'dateOfBirth',
+    ]) {
+      expect(page).toContain(`name="${name}"`)
+      expect(action).toContain(`'${name}'`)
+    }
+  })
+
+  it('clears both password fields but keeps the other values after a failure', () => {
+    const page = code('app', 'register', 'page.tsx')
+    // Passwords are remounted per attempt; the rest are echoed back.
+    expect(page).toContain('key={`${pw}-a`}')
+    expect(page).toContain('key={`${pw}-b`}')
+    expect(page).toContain('defaultValue={v.displayName')
+    expect(page).toContain('defaultValue={v.email')
+    // No password is ever echoed back into the DOM.
+    expect(page).not.toMatch(/defaultValue=\{[^}]*password/i)
+  })
+
+  it('disables the submit button while a submission is in flight', () => {
+    expect(code('app', 'register', 'page.tsx')).toContain('disabled={pending}')
+  })
+})

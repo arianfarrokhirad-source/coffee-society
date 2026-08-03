@@ -4,11 +4,14 @@ import Link from 'next/link'
 import { useActionState } from 'react'
 import { register, type RegistrationFormState } from '@/app/actions/register'
 
-const initial: RegistrationFormState = { error: null, notice: null, values: {} }
+const initial: RegistrationFormState = { error: null, notice: null, values: {}, attempt: 0 }
 
 export default function RegisterPage() {
   const [state, action, pending] = useActionState(register, initial)
   const v = state.values ?? {}
+  // Remount both password inputs on every attempt so neither retains a
+  // value after a failure.
+  const pw = `pw-${state.attempt ?? 0}`
 
   return (
     <div className="mx-auto mt-16 mb-16 max-w-sm">
@@ -54,6 +57,7 @@ export default function RegisterPage() {
             minLength={10}
             maxLength={200}
             autoComplete="new-password"
+            key={`${pw}-a`}
             className="mt-1 w-full"
           />
         </div>
@@ -68,6 +72,7 @@ export default function RegisterPage() {
             minLength={10}
             maxLength={200}
             autoComplete="new-password"
+            key={`${pw}-b`}
             className="mt-1 w-full"
           />
         </div>

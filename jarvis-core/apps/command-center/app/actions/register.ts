@@ -27,6 +27,13 @@ import { buildSignupMetadata, firstFieldError, registrationSchema } from '@/lib/
 export interface RegistrationFormState {
   error: string | null
   notice?: string | null
+  /**
+   * Increments on every return. The form keys both password inputs on
+   * it, so React remounts them and BOTH password fields are cleared
+   * after a failure — retyping a password is safer than leaving it
+   * sitting in the DOM.
+   */
+  attempt?: number
   /** Echoed back so a failure does not wipe the form. Never the password. */
   values?: {
     displayName?: string
@@ -42,9 +49,10 @@ const field = (data: FormData, name: string): string => {
 }
 
 export async function register(
-  _prev: RegistrationFormState,
+  prev: RegistrationFormState,
   formData: FormData
 ): Promise<RegistrationFormState> {
+  const attempt = (prev.attempt ?? 0) + 1
   // Everything except the two password fields is safe to echo back.
   const values = {
     displayName: field(formData, 'displayName'),
@@ -59,7 +67,7 @@ export async function register(
     confirmPassword: field(formData, 'confirmPassword'),
   })
   if (!parsed.success) {
-    return { error: firstFieldError(parsed.error.issues), values }
+    return { error: firstFieldError(parsed.error.issues), values, attempt }
   }
 
   const supabase = await createUserClient()
@@ -68,7 +76,7 @@ export async function register(
     password: parsed.data.password,
     options: { data: buildSignupMetadata(parsed.data) },
   })
-  if (error) return { error: explainAuthError(error).message, values }
+  if (error) return { error: explainAuthError(error, 'sign_up').message, values, attempt }
 
   // Telemetry only, and best-effort: a failure here must never undo an
   // account that already exists. Actor id only — no profile fields.
@@ -103,6 +111,7 @@ export async function register(
       error: null,
       notice: 'Check your email to confirm this address, then sign in.',
       values,
+      attempt,
     }
   }
 
@@ -110,5 +119,6 @@ export async function register(
     error: null,
     notice: 'Account created. Check your email to confirm it, then sign in.',
     values,
+    attempt,
   }
 }

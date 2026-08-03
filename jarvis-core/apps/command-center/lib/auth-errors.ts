@@ -77,21 +77,46 @@ const CODE_KINDS: Record<string, AuthFailureKind> = {
 }
 
 /**
+ * Which operation produced the failure.
+ *
+ * This is not decoration. The status-based fallbacks below are only
+ * meaningful in context: HTTP 400 during sign-in almost always means bad
+ * credentials, but during REGISTRATION it means something else entirely
+ * and "those credentials are not valid" is both wrong and confusing —
+ * there are no credentials to be invalid yet.
+ */
+export type AuthOperation = 'sign_in' | 'sign_up'
+
+/**
  * Classifies a Supabase auth failure. Falls back through code → error
  * class name → HTTP status, and finally to `unknown`, which is the
  * fail-closed answer: an unrecognised failure is never described as
  * something reassuring.
+ *
+ * `operation` defaults to sign-in because that is the only path whose
+ * fallbacks are credential-shaped; every other caller must say so.
  */
-export function classifyAuthError(error: AuthErrorLike | null | undefined): AuthFailureKind {
+export function classifyAuthError(
+  error: AuthErrorLike | null | undefined,
+  operation: AuthOperation = 'sign_in'
+): AuthFailureKind {
   if (!error) return 'unknown'
 
   const code = typeof error.code === 'string' ? error.code : ''
-  if (code && CODE_KINDS[code]) return CODE_KINDS[code]
+  if (code && CODE_KINDS[code]) {
+    const kind = CODE_KINDS[code]
+    // Defence against the same category error as the status fallback:
+    // a credential verdict can never be the answer to "create account".
+    if (kind === 'invalid_credentials' && operation === 'sign_up') return 'unknown'
+    return kind
+  }
 
   // Error classes the SDK raises without a server code.
   if (error.name === 'AuthRetryableFetchError') return 'network'
   if (error.name === 'AuthWeakPasswordError') return 'weak_password'
-  if (error.name === 'AuthInvalidCredentialsError') return 'invalid_credentials'
+  if (error.name === 'AuthInvalidCredentialsError') {
+    return operation === 'sign_in' ? 'invalid_credentials' : 'unknown'
+  }
 
   // An ABSENT status means "no information", not "status zero". Reading
   // the two as the same thing made every unrecognised error look like a
@@ -106,7 +131,16 @@ export function classifyAuthError(error: AuthErrorLike | null | undefined): Auth
   // one failure that leaves no user row behind.
   if (status >= 500) return 'database_error'
   if (status === 422) return 'invalid_email'
-  if (status === 400 || status === 401) return 'invalid_credentials'
+
+  // 400/401 means "bad credentials" ONLY when credentials were being
+  // checked. During registration there is nothing to authenticate yet,
+  // so an unmapped 4xx is genuinely unknown and must say so — reporting
+  // it as invalid credentials sends the user to fix a password that was
+  // never the problem, and hides a real server-side cause such as
+  // signups being disabled.
+  if (status === 400 || status === 401) {
+    return operation === 'sign_in' ? 'invalid_credentials' : 'unknown'
+  }
 
   return 'unknown'
 }
@@ -127,7 +161,8 @@ const KIND_MESSAGES: Record<AuthFailureKind, string> = {
   configuration:
     'This deployment is not configured correctly. Report the code below to PRIME — no action on your side will fix it.',
   network: 'Could not reach the authentication service. Check connectivity and try again.',
-  unknown: 'Authentication failed for an unrecognised reason. Report the code below to PRIME.',
+  unknown:
+    'This did not succeed, and the reason was not one we recognise. It is not necessarily anything you typed — report the code or status below to PRIME.',
 }
 
 /**
@@ -135,18 +170,30 @@ const KIND_MESSAGES: Record<AuthFailureKind, string> = {
  * displayable, because the whole point of this hotfix is that a failure
  * can be acted on rather than guessed at.
  */
-export function describeAuthFailure(kind: AuthFailureKind, code?: string | null): string {
+export function describeAuthFailure(
+  kind: AuthFailureKind,
+  code?: string | null,
+  status?: number | null
+): string {
   const base = KIND_MESSAGES[kind]
-  return isDisplayableCode(code) ? `${base} (code: ${code})` : base
+  if (isDisplayableCode(code)) return `${base} (code: ${code})`
+  // No code: the HTTP status is the only diagnostic left, and a status
+  // number carries nothing sensitive. Without this an unmapped failure
+  // is completely undiagnosable from the UI — which is the whole problem
+  // this module exists to solve.
+  if (typeof status === 'number' && status >= 100 && status <= 599) {
+    return `${base} (status: ${status})`
+  }
+  return base
 }
 
 /** Convenience: classify and describe in one step. */
-export function explainAuthError(error: AuthErrorLike | null | undefined): {
-  kind: AuthFailureKind
-  message: string
-} {
-  const kind = classifyAuthError(error)
-  return { kind, message: describeAuthFailure(kind, error?.code) }
+export function explainAuthError(
+  error: AuthErrorLike | null | undefined,
+  operation: AuthOperation = 'sign_in'
+): { kind: AuthFailureKind; message: string } {
+  const kind = classifyAuthError(error, operation)
+  return { kind, message: describeAuthFailure(kind, error?.code, error?.status) }
 }
 
 /**

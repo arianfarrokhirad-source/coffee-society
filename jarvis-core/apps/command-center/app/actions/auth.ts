@@ -71,7 +71,7 @@ export async function signIn(_prev: AuthFormState, formData: FormData): Promise<
 
   const supabase = await createUserClient()
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data)
-  if (error) return { error: explainAuthError(error).message, email }
+  if (error) return { error: explainAuthError(error, 'sign_in').message, email }
   if (!data.user) {
     return { error: describeAuthFailure('unknown'), email }
   }
