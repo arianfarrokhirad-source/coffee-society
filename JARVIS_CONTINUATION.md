@@ -216,6 +216,11 @@ Do not begin Commit 3 until `/register` is confirmed.
    tokens, phone numbers, birth dates, sex, or other identity data may live in
    graph memory or Obsidian. Integration belongs to the conversation-memory
    phase after current hardening.
-7. **`unknown_outcome` approval state** — designed and documented in
+7. **Multi-model routing seam (Gemini / Codex).** PRIME's Multi-Model
+   Engineering Policy is recorded verbatim in
+   `jarvis-core/docs/codebase/context/ENGINEERING_POLICY.md`. Neither Gemini nor
+   Codex is reachable from this environment, so delegation is currently manual.
+   Building an actual routing seam is unbuilt work and needs approval.
+8. **`unknown_outcome` approval state** — designed and documented in
    `ARCHITECTURE_EVOLUTION.md`, deliberately excluded from Commit 2. Needs a
    decision on which commit introduces it.
