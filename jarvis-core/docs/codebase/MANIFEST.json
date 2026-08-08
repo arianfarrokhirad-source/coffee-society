@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-08T11:51:05.218Z",
-  "repositoryCommit": "42519812d0e74e1beab2241154acecf01838fa6a",
+  "generatedAt": "2026-08-08T12:14:59.267Z",
+  "repositoryCommit": "73353cc688f4ac7b5ef9e04a22777958abf6d8af",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -88,6 +88,7 @@
       ],
       "consumers": [],
       "tests": [
+        "apps/command-center/tests/action-crm.test.ts",
         "apps/command-center/tests/action-prime-claim.test.ts",
         "apps/command-center/tests/action-register.test.ts",
         "apps/command-center/tests/action-signin.test.ts",
@@ -705,6 +706,11 @@
       "kind": "page"
     },
     {
+      "route": "/clients",
+      "path": "apps/command-center/app/clients/page.tsx",
+      "kind": "page"
+    },
+    {
       "route": "/decisions",
       "path": "apps/command-center/app/decisions/page.tsx",
       "kind": "page"
@@ -803,6 +809,7 @@
     }
   ],
   "tests": [
+    "apps/command-center/tests/action-crm.test.ts",
     "apps/command-center/tests/action-prime-claim.test.ts",
     "apps/command-center/tests/action-register.test.ts",
     "apps/command-center/tests/action-signin.test.ts",
@@ -1120,6 +1127,16 @@
       "securityClass": "telemetry"
     },
     {
+      "name": "client.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
+      "securityClass": "operational"
+    },
+    {
       "name": "daily_brief.requested",
       "kind": "system_event",
       "producers": [
@@ -1137,6 +1154,26 @@
       ],
       "consumers": [],
       "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "lead.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
+      "securityClass": "operational"
+    },
+    {
+      "name": "lead.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
       "securityClass": "operational"
     },
     {

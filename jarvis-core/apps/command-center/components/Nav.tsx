@@ -5,6 +5,7 @@ import { signOut } from '@/app/actions/auth'
 const links = [
   ['/executive', 'Executive'],
   ['/businesses', 'Businesses'],
+  ['/clients', 'Clients'],
   ['/objectives', 'Objectives'],
   ['/projects', 'Projects'],
   ['/tasks', 'Tasks'],
