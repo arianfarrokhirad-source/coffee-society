@@ -18,6 +18,7 @@ let auth: {
 
 /** Ordered log of every table operation, so sequencing can be asserted. */
 let ops: string[] = []
+let insertedValues: Record<string, unknown> | null = null
 let leadRow: Record<string, unknown> | null = null
 let existingClient: { id: string } | null = null
 let insertFails = new Set<string>()
@@ -27,6 +28,7 @@ function table(name: string) {
   return {
     insert: (values: Record<string, unknown>) => {
       ops.push(`insert:${name}`)
+      insertedValues = values
       const failed = insertFails.has(name)
       return {
         select: () => ({
@@ -96,6 +98,7 @@ const LEAD_ID = '22222222-2222-4222-8222-222222222222'
 
 beforeEach(() => {
   ops = []
+  insertedValues = null
   leadRow = {
     id: LEAD_ID,
     business_id: 'biz-1',
@@ -132,6 +135,24 @@ describe('capturing a lead', () => {
     // lead over a typo loses the commercial opportunity.
     const state = await createLead({ error: null }, leadForm({ contactEmail: 'sam at acme' }))
     expect(state.error).toBeNull()
+  })
+
+  it('stores an omitted optional field as null, not an empty string', async () => {
+    // The bug this pins: z.string().optional().or(z.literal('')) never
+    // reaches the literal branch, because '' is already a valid string.
+    // Optional fields were being written as '' — which makes "absent"
+    // indistinguishable from "blank" and breaks `is null` queries.
+    const form = new FormData()
+    form.set('businessId', '11111111-1111-4111-8111-111111111111')
+    form.set('companyName', 'Sparse Ltd')
+    form.set('contactEmail', '')
+    form.set('contactPhone', '   ')
+
+    const state = await createLead({ error: null }, form)
+    expect(state.error).toBeNull()
+    expect(insertedValues?.contact_email).toBeNull()
+    expect(insertedValues?.contact_phone).toBeNull()
+    expect(insertedValues?.company_name).toBe('Sparse Ltd')
   })
 
   it('refuses without a company name', async () => {

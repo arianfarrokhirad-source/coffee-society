@@ -69,7 +69,7 @@ function totalsByCurrency(rows: ProposalRow[]): { currency: string; total: numbe
 
 export default async function ProposalsPage() {
   const supabase = await createUserClient()
-  const [{ data: proposals }, { data: leads }] = await Promise.all([
+  const [{ data: proposals }, { data: leads }, { data: audits }] = await Promise.all([
     supabase
       .from('proposals')
       .select(
@@ -81,6 +81,12 @@ export default async function ProposalsPage() {
       .from('leads')
       .select('id, company_name, status')
       .not('status', 'in', '(won,lost,archived)')
+      .order('created_at', { ascending: false })
+      .limit(100),
+    supabase
+      .from('website_audits')
+      .select('id, lead_id, score')
+      .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(100),
   ])
@@ -169,7 +175,7 @@ export default async function ProposalsPage() {
         </div>
 
         <Card title="New proposal">
-          <ProposalForm leads={leads ?? []} />
+          <ProposalForm leads={leads ?? []} audits={audits ?? []} />
         </Card>
       </div>
     </div>

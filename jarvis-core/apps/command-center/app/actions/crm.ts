@@ -40,8 +40,12 @@ const optionalText = (max: number) =>
   z
     .string()
     .max(max)
+    // Order matters: `.optional().or(z.literal(''))` never reaches the
+    // literal branch, because '' is already a valid string and the first
+    // branch wins. That stored '' instead of NULL, making an absent value
+    // indistinguishable from a blank one and breaking `is null` queries.
+    .transform((value) => (value.trim() === '' ? undefined : value.trim()))
     .optional()
-    .or(z.literal('').transform(() => undefined))
 
 const leadSchema = z.object({
   businessId: uuid,
@@ -248,6 +252,9 @@ const lineItemSchema = z.object({
 
 const proposalSchema = z.object({
   leadId: uuid,
+  // proposals.audit_id already exists: a quote can cite the audit that
+  // justifies it. Optional — not every job needs a diagnostic first.
+  auditId: uuid.optional().or(z.literal('').transform(() => undefined)),
   title: z.string().min(1).max(300),
   summary: optionalText(5000),
   currency: z
@@ -285,6 +292,7 @@ export async function createProposal(_prev: CrmState, formData: FormData): Promi
 
   const parsed = proposalSchema.safeParse({
     leadId: field(formData, 'leadId'),
+    auditId: field(formData, 'auditId'),
     title: field(formData, 'title'),
     summary: field(formData, 'summary'),
     currency: field(formData, 'currency') || 'EUR',
@@ -306,6 +314,22 @@ export async function createProposal(_prev: CrmState, formData: FormData): Promi
     .single()
   if (leadError || !lead) return { error: 'Could not load that lead (check your access).' }
 
+  // An audit may only be cited by a proposal for the SAME lead, and only
+  // once completed. Citing someone else's audit — or a draft that is
+  // still changing — would misrepresent the evidence behind a price.
+  let auditId: string | null = null
+  if (parsed.data.auditId) {
+    const { data: auditRow } = await supabase
+      .from('website_audits')
+      .select('id, lead_id, status')
+      .eq('id', parsed.data.auditId)
+      .maybeSingle()
+    if (!auditRow || auditRow.lead_id !== lead.id || auditRow.status !== 'completed') {
+      return { error: 'That audit cannot be cited: it must be a completed audit for this lead.' }
+    }
+    auditId = auditRow.id
+  }
+
   // Total is derived, never taken from the client: a submitted total that
   // disagrees with its own line items is how a quote goes out wrong.
   const total = lineItems.reduce((sum, item) => sum + item.amount, 0)
@@ -316,6 +340,7 @@ export async function createProposal(_prev: CrmState, formData: FormData): Promi
       organization_id: auth.organizationId,
       business_id: lead.business_id,
       lead_id: lead.id,
+      audit_id: auditId,
       title: parsed.data.title,
       summary: parsed.data.summary ?? null,
       line_items: lineItems,

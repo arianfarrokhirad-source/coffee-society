@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `381afb9`. **Grep this file; do not read it whole.**
+Generated from commit `1115a34`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -11,7 +11,7 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
 | `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 6 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 13 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 14 |
 | `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |
 | `permissions` | `packages/permissions` | critical | changing | shared | command-center, workflows | 3 |
@@ -62,6 +62,7 @@ graph LR
 | `/api/cron/daily-brief` | api | `apps/command-center/app/api/cron/daily-brief/route.ts` |
 | `/api/jarvis/chat` | api | `apps/command-center/app/api/jarvis/chat/route.ts` |
 | `/approvals` | page | `apps/command-center/app/approvals/page.tsx` |
+| `/audits` | page | `apps/command-center/app/audits/page.tsx` |
 | `/businesses` | page | `apps/command-center/app/businesses/page.tsx` |
 | `/businesses/[businessId]` | page | `apps/command-center/app/businesses/[businessId]/page.tsx` |
 | `/clients` | page | `apps/command-center/app/clients/page.tsx` |

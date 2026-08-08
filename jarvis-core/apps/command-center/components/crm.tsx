@@ -178,8 +178,11 @@ const ITEM_SLOTS = [0, 1, 2, 3, 4, 5]
 
 export function ProposalForm({
   leads,
+  audits = [],
 }: {
   leads: { id: string; company_name: string; status: string }[]
+  /** Completed audits only — a draft is still changing. */
+  audits?: { id: string; lead_id: string | null; score: number | null }[]
 }) {
   const [state, action, pending] = useActionState(createProposal, initial)
 
@@ -203,6 +206,22 @@ export function ProposalForm({
           ))}
         </select>
       </div>
+
+      {audits.length > 0 && (
+        <div>
+          <label htmlFor="auditId">Cite an audit</label>
+          <select id="auditId" name="auditId" className="mt-1 w-full" defaultValue="">
+            <option value="">No audit</option>
+            {audits.map((a) => (
+              <option key={a.id} value={a.id}>
+                {leads.find((l) => l.id === a.lead_id)?.company_name ?? 'Audit'}
+                {a.score == null ? '' : ` — ${a.score}/100`}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-muted">Must be a completed audit for the same lead.</p>
+        </div>
+      )}
 
       <div>
         <label htmlFor="title">Title</label>

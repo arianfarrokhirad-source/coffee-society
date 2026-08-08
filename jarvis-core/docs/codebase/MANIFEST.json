@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-08T13:06:52.757Z",
-  "repositoryCommit": "381afb9d0f9f075b62337ee4d46acb811a18f384",
+  "generatedAt": "2026-08-08T18:11:17.033Z",
+  "repositoryCommit": "1115a34c8665f2d0a35b61bac1e96363813610ba",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -88,6 +88,7 @@
       ],
       "consumers": [],
       "tests": [
+        "apps/command-center/tests/action-audits.test.ts",
         "apps/command-center/tests/action-crm.test.ts",
         "apps/command-center/tests/action-delivery.test.ts",
         "apps/command-center/tests/action-prime-claim.test.ts",
@@ -698,6 +699,11 @@
       "kind": "page"
     },
     {
+      "route": "/audits",
+      "path": "apps/command-center/app/audits/page.tsx",
+      "kind": "page"
+    },
+    {
       "route": "/businesses",
       "path": "apps/command-center/app/businesses/page.tsx",
       "kind": "page"
@@ -821,6 +827,7 @@
     }
   ],
   "tests": [
+    "apps/command-center/tests/action-audits.test.ts",
     "apps/command-center/tests/action-crm.test.ts",
     "apps/command-center/tests/action-delivery.test.ts",
     "apps/command-center/tests/action-prime-claim.test.ts",
@@ -1184,6 +1191,7 @@
       "name": "lead.status_changed",
       "kind": "audit_action",
       "producers": [
+        "apps/command-center/app/actions/audits.ts",
         "apps/command-center/app/actions/crm.ts"
       ],
       "consumers": [],
@@ -1309,6 +1317,26 @@
       ],
       "consumers": [],
       "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_audit.completed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/audits.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_audit.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/audits.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
       "securityClass": "operational"
     },
     {
