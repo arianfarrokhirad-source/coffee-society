@@ -1,4 +1,4 @@
-import type { AIProvider, AIRequest, AIResponse } from '../types'
+import type { AIProvider, AIRequest, AIResponse, ProviderProbeResult } from '../types'
 import { AIProviderError } from '../types'
 
 // Anthropic Messages API adapter. Direct HTTPS, no SDK dependency.
@@ -28,6 +28,22 @@ export function createAnthropicProvider(options?: {
   return {
     name: 'anthropic',
     isConfigured: () => apiKey().length > 0,
+    // Costs no tokens: lists models rather than generating any.
+    async probe(signal: AbortSignal): Promise<ProviderProbeResult> {
+      try {
+        const response = await fetchFn(`${baseUrl}/v1/models?limit=1`, {
+          method: 'GET',
+          headers: { 'x-api-key': apiKey(), 'anthropic-version': '2023-06-01' },
+          signal,
+        })
+        return { httpStatus: response.status }
+      } catch (cause) {
+        return {
+          httpStatus: null,
+          transportError: cause instanceof Error ? cause.name : 'unknown',
+        }
+      }
+    },
     async complete(request: AIRequest): Promise<AIResponse> {
       if (!apiKey()) throw new AIProviderError('anthropic', 'ANTHROPIC_API_KEY is not configured')
 

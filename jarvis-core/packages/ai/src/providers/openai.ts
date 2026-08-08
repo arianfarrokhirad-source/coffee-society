@@ -1,4 +1,4 @@
-import type { AIProvider, AIRequest, AIResponse } from '../types'
+import type { AIProvider, AIRequest, AIResponse, ProviderProbeResult } from '../types'
 import { AIProviderError } from '../types'
 
 // OpenAI-compatible Chat Completions adapter. Works with api.openai.com
@@ -22,6 +22,22 @@ export function createOpenAIProvider(options?: {
   return {
     name: 'openai',
     isConfigured: () => apiKey().length > 0,
+    // Costs no tokens: lists models rather than generating any.
+    async probe(signal: AbortSignal): Promise<ProviderProbeResult> {
+      try {
+        const response = await fetchFn(`${baseUrl()}/v1/models`, {
+          method: 'GET',
+          headers: { authorization: `Bearer ${apiKey()}` },
+          signal,
+        })
+        return { httpStatus: response.status }
+      } catch (cause) {
+        return {
+          httpStatus: null,
+          transportError: cause instanceof Error ? cause.name : 'unknown',
+        }
+      }
+    },
     async complete(request: AIRequest): Promise<AIResponse> {
       if (!apiKey()) throw new AIProviderError('openai', 'OPENAI_API_KEY is not configured')
 
