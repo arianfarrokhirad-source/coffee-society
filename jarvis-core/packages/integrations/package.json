@@ -1,0 +1,13 @@
+{
+  "name": "@jarvis/integrations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@jarvis/security": "*",
+    "@jarvis/shared": "*",
+    "zod": "^3.25.0"
+  }
+}

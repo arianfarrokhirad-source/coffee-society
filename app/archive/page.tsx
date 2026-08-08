@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { adminClient } from '@/lib/supabase/admin'
 
-export const revalidate = 60 // rebuild page every 60s
+// Rendered on demand: keeps the archive fresh and avoids executing a
+// Supabase query at build time (which fails when env vars are absent,
+// e.g. on a Vercel project without configuration).
+export const dynamic = 'force-dynamic'
 
 type Q = {
   id: string
