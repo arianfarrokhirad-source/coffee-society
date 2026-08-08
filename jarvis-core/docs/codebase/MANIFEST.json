@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-02T13:18:22.124Z",
-  "repositoryCommit": "bf4ca8ea97aee8f25006dd3241d77775b38c9168",
+  "generatedAt": "2026-08-08T11:51:05.218Z",
+  "repositoryCommit": "42519812d0e74e1beab2241154acecf01838fa6a",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -40,10 +40,15 @@
       "name": "@jarvis/ai",
       "path": "packages/ai",
       "exports": [
+        "* ./health",
+        "* ./pricing",
+        "* ./retry",
         "* ./router",
         "* ./structured",
         "* ./types",
+        "* ./usage",
         "createAnthropicProvider",
+        "createGeminiProvider",
         "createOpenAIProvider"
       ],
       "dependsOn": [
@@ -54,8 +59,12 @@
         "@jarvis/workflows"
       ],
       "tests": [
+        "packages/ai/tests/gemini.test.ts",
+        "packages/ai/tests/health.test.ts",
+        "packages/ai/tests/retry.test.ts",
         "packages/ai/tests/router.test.ts",
-        "packages/ai/tests/structured.test.ts"
+        "packages/ai/tests/structured.test.ts",
+        "packages/ai/tests/usage.test.ts"
       ],
       "purpose": "Provider-independent capability router, Anthropic/OpenAI adapters, structured output validation.",
       "securitySensitivity": "sensitive",
@@ -79,10 +88,15 @@
       ],
       "consumers": [],
       "tests": [
+        "apps/command-center/tests/action-prime-claim.test.ts",
+        "apps/command-center/tests/action-register.test.ts",
+        "apps/command-center/tests/action-signin.test.ts",
         "apps/command-center/tests/approval-transitions.test.ts",
         "apps/command-center/tests/auth-errors.test.ts",
         "apps/command-center/tests/cron-auth.test.ts",
+        "apps/command-center/tests/middleware-auth.test.ts",
         "apps/command-center/tests/prime-claim.test.ts",
+        "apps/command-center/tests/provider-wiring.test.ts",
         "apps/command-center/tests/registration.test.ts"
       ],
       "purpose": "Next.js App Router Command Centre: pages, server actions, API routes, auth middleware.",
@@ -789,13 +803,22 @@
     }
   ],
   "tests": [
+    "apps/command-center/tests/action-prime-claim.test.ts",
+    "apps/command-center/tests/action-register.test.ts",
+    "apps/command-center/tests/action-signin.test.ts",
     "apps/command-center/tests/approval-transitions.test.ts",
     "apps/command-center/tests/auth-errors.test.ts",
     "apps/command-center/tests/cron-auth.test.ts",
+    "apps/command-center/tests/middleware-auth.test.ts",
     "apps/command-center/tests/prime-claim.test.ts",
+    "apps/command-center/tests/provider-wiring.test.ts",
     "apps/command-center/tests/registration.test.ts",
+    "packages/ai/tests/gemini.test.ts",
+    "packages/ai/tests/health.test.ts",
+    "packages/ai/tests/retry.test.ts",
     "packages/ai/tests/router.test.ts",
     "packages/ai/tests/structured.test.ts",
+    "packages/ai/tests/usage.test.ts",
     "packages/database/tests/critical-audit.test.ts",
     "packages/integrations/tests/integrations.test.ts",
     "packages/permissions/tests/agent-scope.test.ts",

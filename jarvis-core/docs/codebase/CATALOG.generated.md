@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `bf4ca8e`. **Grep this file; do not read it whole.**
+Generated from commit `4251981`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -10,8 +10,8 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | Module | Path | Sensitivity | Stability | Depends on | Consumers | Tests |
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
-| `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 2 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 5 |
+| `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 6 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 10 |
 | `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |
 | `permissions` | `packages/permissions` | critical | changing | shared | command-center, workflows | 3 |

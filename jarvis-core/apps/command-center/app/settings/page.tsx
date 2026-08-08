@@ -48,6 +48,9 @@ export default async function SettingsPage() {
           <Badge tone={providers.openai ? 'ok' : 'muted'}>
             OpenAI {providers.openai ? 'configured' : 'not configured'}
           </Badge>
+          <Badge tone={providers.gemini ? 'ok' : 'muted'}>
+            Gemini {providers.gemini ? 'configured' : 'not configured'}
+          </Badge>
         </div>
       </Card>
 

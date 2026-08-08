@@ -1,0 +1,73 @@
+name: CI
+
+# Merge protection for jarvis-core. Before this workflow existed the test
+# suite only ran when someone remembered to run it locally, which means it
+# protected nothing automatically — a suite nothing executes cannot guard a
+# merge.
+#
+# Deliberately requires no secrets. Every check here runs against mocked
+# transport and an in-memory store, so a fork PR and a credential-less
+# environment produce the same result. Anything needing a live Supabase or a
+# real provider key belongs in a separate, manually triggered workflow.
+
+on:
+  pull_request:
+    paths:
+      - 'jarvis-core/**'
+      - '.github/workflows/ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'jarvis-core/**'
+      - '.github/workflows/ci.yml'
+
+concurrency:
+  # A superseded push should not keep burning runners.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: jarvis-core
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: jarvis-core/package-lock.json
+
+      # `ci` rather than `install`: fails on a lockfile mismatch instead of
+      # silently resolving different versions than the ones reviewed.
+      - name: Install
+        run: npm ci
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit and integration tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
+        env:
+          # The build must not depend on real credentials. These are
+          # syntactically valid placeholders so module initialisation
+          # succeeds; nothing in the build path makes a network call.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
+      - name: Codebase manifest verification
+        run: npm run codebase:verify

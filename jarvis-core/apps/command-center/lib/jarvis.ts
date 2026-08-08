@@ -2,9 +2,11 @@ import 'server-only'
 import {
   createRouter,
   createAnthropicProvider,
+  createGeminiProvider,
   createOpenAIProvider,
   type AIRouter,
 } from '@jarvis/ai'
+import { AI_PROVIDERS, type AIProviderName } from '@jarvis/shared'
 import { createServiceClient, createSupabaseStore, type JarvisStore } from '@jarvis/database'
 import { createInMemoryRateLimiter, type RateLimiter } from '@jarvis/security'
 
@@ -23,9 +25,11 @@ export function getStore(): JarvisStore {
 
 export function getRouter(): AIRouter | null {
   if (!router) {
-    const providers = [createAnthropicProvider(), createOpenAIProvider()].filter((p) =>
-      p.isConfigured()
-    )
+    const providers = [
+      createAnthropicProvider(),
+      createOpenAIProvider(),
+      createGeminiProvider(),
+    ].filter((p) => p.isConfigured())
     router = providers.length > 0 ? createRouter(providers) : null
   }
   return router
@@ -36,9 +40,25 @@ export function getRateLimiter(): RateLimiter {
   return limiter
 }
 
-export function providerStatus(): { anthropic: boolean; openai: boolean } {
-  return {
-    anthropic: (process.env.ANTHROPIC_API_KEY ?? '').length > 0,
-    openai: (process.env.OPENAI_API_KEY ?? '').length > 0,
+/**
+ * Credential environment variable per provider.
+ *
+ * Typed as a total Record over AIProviderName deliberately: adding a
+ * provider to AI_PROVIDERS without adding it here is a compile error, not
+ * a silent gap. The previous version listed providers by hand and so went
+ * stale the moment Gemini was added — the app could not construct it, and
+ * a Gemini-only deployment had no router at all.
+ */
+const PROVIDER_CREDENTIAL_ENV: Record<AIProviderName, string> = {
+  anthropic: 'ANTHROPIC_API_KEY',
+  openai: 'OPENAI_API_KEY',
+  gemini: 'GEMINI_API_KEY',
+}
+
+export function providerStatus(): Record<AIProviderName, boolean> {
+  const status = {} as Record<AIProviderName, boolean>
+  for (const provider of AI_PROVIDERS) {
+    status[provider] = (process.env[PROVIDER_CREDENTIAL_ENV[provider]] ?? '').length > 0
   }
+  return status
 }
