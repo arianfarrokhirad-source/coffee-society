@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-08T12:27:33.373Z",
-  "repositoryCommit": "df5c7db8b2835ba2fcfb905af036dfea320faa59",
+  "generatedAt": "2026-08-08T13:06:52.757Z",
+  "repositoryCommit": "381afb9d0f9f075b62337ee4d46acb811a18f384",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -89,6 +89,7 @@
       "consumers": [],
       "tests": [
         "apps/command-center/tests/action-crm.test.ts",
+        "apps/command-center/tests/action-delivery.test.ts",
         "apps/command-center/tests/action-prime-claim.test.ts",
         "apps/command-center/tests/action-proposals.test.ts",
         "apps/command-center/tests/action-register.test.ts",
@@ -717,6 +718,11 @@
       "kind": "page"
     },
     {
+      "route": "/delivery",
+      "path": "apps/command-center/app/delivery/page.tsx",
+      "kind": "page"
+    },
+    {
       "route": "/executive",
       "path": "apps/command-center/app/executive/page.tsx",
       "kind": "page"
@@ -816,6 +822,7 @@
   ],
   "tests": [
     "apps/command-center/tests/action-crm.test.ts",
+    "apps/command-center/tests/action-delivery.test.ts",
     "apps/command-center/tests/action-prime-claim.test.ts",
     "apps/command-center/tests/action-proposals.test.ts",
     "apps/command-center/tests/action-register.test.ts",
@@ -1302,6 +1309,36 @@
       ],
       "consumers": [],
       "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_project.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/delivery.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_project.deployed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/delivery.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_project.stage_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/delivery.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
       "securityClass": "operational"
     }
   ]

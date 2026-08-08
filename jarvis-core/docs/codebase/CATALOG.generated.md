@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `df5c7db`. **Grep this file; do not read it whole.**
+Generated from commit `381afb9`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -11,7 +11,7 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
 | `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 6 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 12 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 13 |
 | `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |
 | `permissions` | `packages/permissions` | critical | changing | shared | command-center, workflows | 3 |
@@ -66,6 +66,7 @@ graph LR
 | `/businesses/[businessId]` | page | `apps/command-center/app/businesses/[businessId]/page.tsx` |
 | `/clients` | page | `apps/command-center/app/clients/page.tsx` |
 | `/decisions` | page | `apps/command-center/app/decisions/page.tsx` |
+| `/delivery` | page | `apps/command-center/app/delivery/page.tsx` |
 | `/executive` | page | `apps/command-center/app/executive/page.tsx` |
 | `/jarvis` | page | `apps/command-center/app/jarvis/page.tsx` |
 | `/knowledge` | page | `apps/command-center/app/knowledge/page.tsx` |

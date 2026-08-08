@@ -2,7 +2,7 @@
 
 # Event catalog (generated)
 
-Generated from commit `df5c7db`. Event names and
+Generated from commit `381afb9`. Event names and
 producers are discovered in source; consumers, delivery guarantee and security
 class come from `tools/codebase/annotations.json` because they cannot be derived
 mechanically. `codebase:verify` fails when an event in code has no annotation.
@@ -56,3 +56,6 @@ Written to `audit_logs` (append-only). `atomic` means the row commits in the sam
 | `proposal.status_changed` | `apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
 | `task.status_changed` | `apps/command-center/app/actions/work.ts` | none — recorded only | best effort | operational |
 | `tool.executed` | `packages/workflows/src/tools.ts` | none — recorded only | best effort | operational |
+| `website_project.created` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | **unannotated** | operational |
+| `website_project.deployed` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | **unannotated** | operational |
+| `website_project.stage_changed` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | **unannotated** | operational |
