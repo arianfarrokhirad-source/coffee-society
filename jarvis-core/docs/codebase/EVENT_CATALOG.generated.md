@@ -2,7 +2,7 @@
 
 # Event catalog (generated)
 
-Generated from commit `73353cc`. Event names and
+Generated from commit `df5c7db`. Event names and
 producers are discovered in source; consumers, delivery guarantee and security
 class come from `tools/codebase/annotations.json` because they cannot be derived
 mechanically. `codebase:verify` fails when an event in code has no annotation.
@@ -52,5 +52,7 @@ Written to `audit_logs` (append-only). `atomic` means the row commits in the sam
 | `prime.claim_denied` | `apps/command-center/app/actions/auth.ts` | none — recorded only | best effort | security-relevant |
 | `prime.claimed` | `supabase/migrations/0007_rls.sql`<br>`supabase/migrations/0009_prime_bootstrap.sql` | none — recorded only | atomic with state change | security-relevant |
 | `project.created` | `apps/command-center/app/actions/work.ts` | none — recorded only | best effort | operational |
+| `proposal.created` | `apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
+| `proposal.status_changed` | `apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
 | `task.status_changed` | `apps/command-center/app/actions/work.ts` | none — recorded only | best effort | operational |
 | `tool.executed` | `packages/workflows/src/tools.ts` | none — recorded only | best effort | operational |

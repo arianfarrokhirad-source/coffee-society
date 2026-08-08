@@ -218,3 +218,160 @@ export async function convertLeadToClient(leadId: string): Promise<CrmState> {
   revalidatePath('/clients')
   return { error: null, ok: true }
 }
+
+// ---------------------------------------------------------------------
+// Proposals — where money enters the pipeline.
+//
+// The proposals table already carries line_items, total_amount, currency
+// and an approval_id hook into the existing approvals system. This
+// exposes the record and its lifecycle; the approval linkage is NOT
+// wired yet and pending_approval is therefore set by hand rather than by
+// an approval being raised. Said plainly so nobody assumes a sign-off
+// gate exists that does not.
+// ---------------------------------------------------------------------
+
+export const PROPOSAL_STATUSES = [
+  'draft',
+  'pending_approval',
+  'approved',
+  'sent',
+  'accepted',
+  'declined',
+  'expired',
+] as const
+
+/** A single priced line. Amount is minor-unit-agnostic decimal text. */
+const lineItemSchema = z.object({
+  description: z.string().min(1).max(300),
+  amount: z.number().finite().min(0),
+})
+
+const proposalSchema = z.object({
+  leadId: uuid,
+  title: z.string().min(1).max(300),
+  summary: optionalText(5000),
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/, 'Currency must be a three-letter code')
+    .default('EUR'),
+})
+
+/**
+ * Reads the repeated description/amount pairs off the form.
+ *
+ * A row with no description is skipped rather than rejected — an empty
+ * spare row is the normal state of a form with fixed slots, not an
+ * error worth blocking a proposal over.
+ */
+function readLineItems(formData: FormData): { description: string; amount: number }[] {
+  const items: { description: string; amount: number }[] = []
+  for (const [key, value] of formData.entries()) {
+    const match = /^item_(\d+)_description$/.exec(key)
+    if (!match || typeof value !== 'string' || value.trim() === '') continue
+    const rawAmount = formData.get(`item_${match[1]}_amount`)
+    const amount = Number(typeof rawAmount === 'string' ? rawAmount : '')
+    const parsed = lineItemSchema.safeParse({
+      description: value.trim(),
+      amount: Number.isFinite(amount) ? amount : 0,
+    })
+    if (parsed.success) items.push(parsed.data)
+  }
+  return items
+}
+
+export async function createProposal(_prev: CrmState, formData: FormData): Promise<CrmState> {
+  const auth = await getAuthContext()
+  if (!auth?.hasMembership || !auth.organizationId) return { error: 'No active membership.' }
+
+  const parsed = proposalSchema.safeParse({
+    leadId: field(formData, 'leadId'),
+    title: field(formData, 'title'),
+    summary: field(formData, 'summary'),
+    currency: field(formData, 'currency') || 'EUR',
+  })
+  if (!parsed.success) return { error: 'Choose a lead and give the proposal a title.' }
+
+  const lineItems = readLineItems(formData)
+  if (lineItems.length === 0) return { error: 'Add at least one line item.' }
+
+  const supabase = await createUserClient()
+
+  // business_id comes from the lead the database returns, never from the
+  // form — otherwise a caller could file a proposal against a business
+  // they cannot see.
+  const { data: lead, error: leadError } = await supabase
+    .from('leads')
+    .select('id, business_id')
+    .eq('id', parsed.data.leadId)
+    .single()
+  if (leadError || !lead) return { error: 'Could not load that lead (check your access).' }
+
+  // Total is derived, never taken from the client: a submitted total that
+  // disagrees with its own line items is how a quote goes out wrong.
+  const total = lineItems.reduce((sum, item) => sum + item.amount, 0)
+
+  const { data, error } = await supabase
+    .from('proposals')
+    .insert({
+      organization_id: auth.organizationId,
+      business_id: lead.business_id,
+      lead_id: lead.id,
+      title: parsed.data.title,
+      summary: parsed.data.summary ?? null,
+      line_items: lineItems,
+      total_amount: total,
+      currency: parsed.data.currency,
+      status: 'draft',
+      created_by: auth.userId,
+    })
+    .select('id')
+    .single()
+
+  if (error || !data) return { error: 'Could not create the proposal (check your access).' }
+
+  await audit('proposal.created', 'proposal', data.id, lead.business_id, {
+    currency: parsed.data.currency,
+  })
+  revalidatePath('/proposals')
+  revalidatePath('/clients')
+  return { error: null, ok: true }
+}
+
+export async function updateProposalStatus(proposalId: string, status: string): Promise<CrmState> {
+  const auth = await getAuthContext()
+  if (!auth?.hasMembership) return { error: 'No active membership.' }
+  if (!uuid.safeParse(proposalId).success) return { error: 'Unknown proposal.' }
+  if (!(PROPOSAL_STATUSES as readonly string[]).includes(status)) {
+    return { error: 'Unknown status.' }
+  }
+
+  const supabase = await createUserClient()
+  const { data, error } = await supabase
+    .from('proposals')
+    .update({ status })
+    .eq('id', proposalId)
+    .select('id, business_id, lead_id')
+    .single()
+
+  if (error || !data) return { error: 'Could not update the proposal (check your access).' }
+
+  await audit('proposal.status_changed', 'proposal', data.id, data.business_id, { status })
+
+  // Sending a proposal is what moves the lead on. Keeping the two in step
+  // here means the pipeline board cannot disagree with the proposal list.
+  if (status === 'sent' && data.lead_id) {
+    const { error: leadError } = await supabase
+      .from('leads')
+      .update({ status: 'proposal_sent' })
+      .eq('id', data.lead_id)
+    if (!leadError) {
+      await audit('lead.status_changed', 'lead', data.lead_id, data.business_id, {
+        status: 'proposal_sent',
+      })
+    }
+  }
+
+  revalidatePath('/proposals')
+  revalidatePath('/clients')
+  return { error: null, ok: true }
+}

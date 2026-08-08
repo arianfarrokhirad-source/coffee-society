@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `73353cc`. **Grep this file; do not read it whole.**
+Generated from commit `df5c7db`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -11,7 +11,7 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
 | `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 6 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 11 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 12 |
 | `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |
 | `permissions` | `packages/permissions` | critical | changing | shared | command-center, workflows | 3 |
@@ -72,6 +72,7 @@ graph LR
 | `/login` | page | `apps/command-center/app/login/page.tsx` |
 | `/objectives` | page | `apps/command-center/app/objectives/page.tsx` |
 | `/projects` | page | `apps/command-center/app/projects/page.tsx` |
+| `/proposals` | page | `apps/command-center/app/proposals/page.tsx` |
 | `/register` | page | `apps/command-center/app/register/page.tsx` |
 | `/reports` | page | `apps/command-center/app/reports/page.tsx` |
 | `/settings` | page | `apps/command-center/app/settings/page.tsx` |

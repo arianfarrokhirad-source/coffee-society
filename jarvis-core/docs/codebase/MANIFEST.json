@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-08T12:14:59.267Z",
-  "repositoryCommit": "73353cc688f4ac7b5ef9e04a22777958abf6d8af",
+  "generatedAt": "2026-08-08T12:27:33.373Z",
+  "repositoryCommit": "df5c7db8b2835ba2fcfb905af036dfea320faa59",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -90,6 +90,7 @@
       "tests": [
         "apps/command-center/tests/action-crm.test.ts",
         "apps/command-center/tests/action-prime-claim.test.ts",
+        "apps/command-center/tests/action-proposals.test.ts",
         "apps/command-center/tests/action-register.test.ts",
         "apps/command-center/tests/action-signin.test.ts",
         "apps/command-center/tests/approval-transitions.test.ts",
@@ -746,6 +747,11 @@
       "kind": "page"
     },
     {
+      "route": "/proposals",
+      "path": "apps/command-center/app/proposals/page.tsx",
+      "kind": "page"
+    },
+    {
       "route": "/register",
       "path": "apps/command-center/app/register/page.tsx",
       "kind": "page"
@@ -811,6 +817,7 @@
   "tests": [
     "apps/command-center/tests/action-crm.test.ts",
     "apps/command-center/tests/action-prime-claim.test.ts",
+    "apps/command-center/tests/action-proposals.test.ts",
     "apps/command-center/tests/action-register.test.ts",
     "apps/command-center/tests/action-signin.test.ts",
     "apps/command-center/tests/approval-transitions.test.ts",
@@ -1245,6 +1252,26 @@
       ],
       "consumers": [],
       "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "proposal.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
+      "securityClass": "operational"
+    },
+    {
+      "name": "proposal.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "unknown",
       "securityClass": "operational"
     },
     {
