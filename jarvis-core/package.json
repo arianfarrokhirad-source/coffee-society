@@ -2,7 +2,7 @@
   "name": "jarvis-core",
   "version": "0.1.0",
   "private": true,
-  "description": "JARVIS — private multi-business AI operating system (Phase 1)",
+  "description": "JARVIS \u2014 private multi-business AI operating system (Phase 1)",
   "workspaces": [
     "apps/*",
     "packages/*",
@@ -22,7 +22,10 @@
     "codebase:generate": "node --no-warnings tools/codebase/generate.ts",
     "codebase:verify": "node --no-warnings tools/codebase/verify.ts",
     "graph": "tsx tools/graphify/index.ts",
-    "graph:health": "tsx tools/graphify/index.ts --health"
+    "graph:health": "tsx tools/graphify/index.ts --health",
+    "vault:check": "tsx tools/vault/index.ts",
+    "vault:search": "tsx tools/vault/index.ts search",
+    "vault:list": "tsx tools/vault/index.ts list"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -85,3 +85,11 @@ jobs:
       # Structural pass only: no API key, no spend, deterministic.
       - name: Graphify index and health
         run: npm run graph -- --strict
+
+      # The vault's review gate. Errors fail the build: a note with no
+      # frontmatter is invisible to retrieval, an SOP with no review date
+      # is a liability, and identity data reaching git history is
+      # effectively permanent. Warnings (a wikilink pointing at nothing)
+      # are reported without blocking.
+      - name: Vault validation
+        run: npm run vault:check
