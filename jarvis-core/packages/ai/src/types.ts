@@ -46,6 +46,71 @@ export interface AIProvider {
    * result: some providers echo request headers on error.
    */
   probe?(signal: AbortSignal): Promise<ProviderProbeResult>
+  /**
+   * Turns text into vectors. Optional because not every provider offers
+   * embeddings — Anthropic does not, and pretending otherwise would put a
+   * method on the interface that always throws.
+   *
+   * Absence is meaningful and is what resolveEmbeddingRoute() reads: a
+   * provider without embed() is simply not a candidate.
+   */
+  embed?(request: EmbeddingRequest): Promise<EmbeddingResponse>
+  /**
+   * Largest number of inputs the provider accepts in one embed() call.
+   * Callers must respect it; exceeding it is a 400, not a slow success.
+   * Undefined means "unspecified" and callers should send one at a time.
+   */
+  readonly maxEmbeddingBatch?: number
+}
+
+/**
+ * What the vector will be used for.
+ *
+ * This is not decoration. Modern embedding models are ASYMMETRIC: they
+ * project a stored passage and the question asked about it into
+ * deliberately different places, because a question rarely looks like its
+ * own answer. "How do I reset a password?" shares few words with the
+ * paragraph that explains it.
+ *
+ * Embedding both sides with the same task type is the single most common
+ * way to build retrieval that returns plausible nonsense — it still
+ * returns the nearest neighbours, they are just the wrong ones, so the
+ * bug reads as "the model is not very good" rather than as a defect.
+ *
+ * Corollary that governs this whole package: a stored vector is only
+ * comparable to another vector produced by the SAME model AND the same
+ * side of that asymmetry. That is why EmbeddedVector carries its model
+ * and task type around with it.
+ */
+export type EmbeddingTaskType =
+  'document' | 'query' | 'similarity' | 'classification' | 'clustering' | 'code_query'
+
+export interface EmbeddingRequest {
+  model: string
+  inputs: string[]
+  taskType?: EmbeddingTaskType
+  /**
+   * Requested vector width, for models that support truncation. Omitted
+   * means the model's native width.
+   */
+  dimensions?: number
+}
+
+export interface EmbeddingVector {
+  /** Position in the request's `inputs`. Order is a contract. */
+  index: number
+  values: number[]
+}
+
+export interface EmbeddingResponse {
+  provider: AIProviderName
+  model: string
+  vectors: EmbeddingVector[]
+  /** Embedding endpoints bill input only; there is no output to charge for. */
+  usage: AIUsage | null
+  latencyMs: number
+  /** Width of the returned vectors, or null when none came back. */
+  dimensions: number | null
 }
 
 /** Raw outcome of one liveness probe, before classification. */

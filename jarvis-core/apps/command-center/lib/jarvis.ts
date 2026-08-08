@@ -1,10 +1,12 @@
 import 'server-only'
 import {
+  createEmbeddingClient,
   createRouter,
   createAnthropicProvider,
   createGeminiProvider,
   createOpenAIProvider,
   type AIRouter,
+  type EmbeddingClient,
 } from '@jarvis/ai'
 import { AI_PROVIDERS, type AIProviderName } from '@jarvis/shared'
 import { createServiceClient, createSupabaseStore, type JarvisStore } from '@jarvis/database'
@@ -17,6 +19,19 @@ import { createInMemoryRateLimiter, type RateLimiter } from '@jarvis/security'
 let store: JarvisStore | null = null
 let router: AIRouter | null = null
 let limiter: RateLimiter | null = null
+let embeddings: EmbeddingClient | null = null
+
+/**
+ * Every provider adapter, configured or not.
+ *
+ * Filtering by isConfigured() happens at the point of use rather than
+ * here, because the router and the embedding client disqualify providers
+ * for different reasons — a provider can be usable for completions and
+ * useless for embeddings.
+ */
+function allProviders() {
+  return [createAnthropicProvider(), createOpenAIProvider(), createGeminiProvider()]
+}
 
 export function getStore(): JarvisStore {
   if (!store) store = createSupabaseStore(createServiceClient())
@@ -25,14 +40,25 @@ export function getStore(): JarvisStore {
 
 export function getRouter(): AIRouter | null {
   if (!router) {
-    const providers = [
-      createAnthropicProvider(),
-      createOpenAIProvider(),
-      createGeminiProvider(),
-    ].filter((p) => p.isConfigured())
+    const providers = allProviders().filter((p) => p.isConfigured())
     router = providers.length > 0 ? createRouter(providers) : null
   }
   return router
+}
+
+/**
+ * Embedding client, or null when nothing can embed.
+ *
+ * Null rather than a client that fails on first use: a caller can then
+ * choose keyword search instead of discovering at query time that the
+ * index was never built.
+ */
+export function getEmbeddings(): EmbeddingClient | null {
+  if (!embeddings) {
+    const client = createEmbeddingClient(allProviders())
+    embeddings = client.resolveRoute().ok ? client : null
+  }
+  return embeddings
 }
 
 export function getRateLimiter(): RateLimiter {
