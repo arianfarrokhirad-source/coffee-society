@@ -1,5 +1,6 @@
 'use client'
 
+import type { AIProviderName } from '@jarvis/shared'
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 
@@ -20,7 +21,7 @@ interface ChatReply {
   runId: string | null
   businessCode: string | null
   agentCode: string
-  provider: 'anthropic' | 'openai' | 'none'
+  provider: AIProviderName | 'none'
   model: string | null
   intent: string
   text: string

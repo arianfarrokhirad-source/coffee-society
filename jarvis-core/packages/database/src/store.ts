@@ -1,5 +1,6 @@
 import type {
   AgentCode,
+  AIProviderName,
   ApprovalStatus,
   BusinessCode,
   PriorityLevel,
@@ -121,7 +122,7 @@ export interface CreateAgentRunInput {
 
 export interface UpdateAgentRunInput {
   status?: AgentRunRow['status']
-  provider?: 'anthropic' | 'openai' | 'none' | null
+  provider?: AIProviderName | 'none' | null
   model?: string | null
   outputSummary?: string | null
   rationale?: string | null
@@ -147,7 +148,7 @@ export interface RecordToolCallInput {
 export interface RecordModelUsageInput {
   organizationId: string
   runId?: string | null
-  provider: 'anthropic' | 'openai'
+  provider: AIProviderName
   model: string
   inputTokens?: number | null
   outputTokens?: number | null

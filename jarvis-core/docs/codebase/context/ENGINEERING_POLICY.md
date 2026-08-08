@@ -9,11 +9,11 @@ while maximising reliability and engineering quality.
 
 ## Model responsibilities
 
-| Model | Role | Owns |
-| --- | --- | --- |
-| **Claude** | Chief Architect | Architecture, system design, security, complex reasoning, planning, agent orchestration, code review, technical decisions, hard debugging, mentoring PRIME |
-| **Gemini** | Processing Engine | Graphify semantic extraction, embeddings, OCR, large-document analysis, knowledge extraction, repository indexing, bulk transformations, high-volume processing |
-| **ChatGPT Codex** | Software Engineer | Feature implementation, boilerplate, refactoring, unit and integration tests, documentation generation, routine bug fixes, repetitive coding |
+| Model             | Role              | Owns                                                                                                                                                            |
+| ----------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Claude**        | Chief Architect   | Architecture, system design, security, complex reasoning, planning, agent orchestration, code review, technical decisions, hard debugging, mentoring PRIME      |
+| **Gemini**        | Processing Engine | Graphify semantic extraction, embeddings, OCR, large-document analysis, knowledge extraction, repository indexing, bulk transformations, high-volume processing |
+| **ChatGPT Codex** | Software Engineer | Feature implementation, boilerplate, refactoring, unit and integration tests, documentation generation, routine bug fixes, repetitive coding                    |
 
 Claude is **not** to be used for large-scale indexing, bulk extraction,
 repetitive implementation, or long-document processing when another model fits

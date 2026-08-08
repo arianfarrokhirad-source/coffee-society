@@ -44,8 +44,18 @@ export interface ModelRoute {
   kind: RouteKind
   provider: AIProviderName
   model: string
-  /** Which provider+model to try if the primary is unavailable. */
+  /**
+   * Which provider+model to try if the primary is unavailable.
+   * Retained for callers that only need the next hop; `chain` is the
+   * complete picture.
+   */
   fallback: { provider: AIProviderName; model: string } | null
+  /**
+   * Every usable provider+model for this route, in preference order,
+   * starting with the primary. The router walks this on failure, so a
+   * route is only unroutable when every entry has been tried.
+   */
+  chain: { provider: AIProviderName; model: string }[]
 }
 
 /** Context assembled by the orchestrator for a specialist agent call. */

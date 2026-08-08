@@ -85,5 +85,5 @@ export const APPROVAL_STATUSES = [
 ] as const
 export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number]
 
-export const AI_PROVIDERS = ['anthropic', 'openai'] as const
+export const AI_PROVIDERS = ['anthropic', 'openai', 'gemini'] as const
 export type AIProviderName = (typeof AI_PROVIDERS)[number]

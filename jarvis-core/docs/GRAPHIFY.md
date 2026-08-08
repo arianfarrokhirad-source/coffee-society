@@ -27,22 +27,22 @@ the repository, the repository is right.
 
 Minimum viable node and edge types:
 
-| Node | Key attributes |
-| --- | --- |
-| `file` | path, language, content hash, size |
-| `module` / `package` | name, workspace path, dependencies |
-| `symbol` | name, kind (function/class/type/const), file, line span, exported |
-| `test` | path, framework, subject under test |
-| `migration` | number, path, objects created/dropped |
-| `doc` | path, title, kind (ADR/SOP/context) |
+| Node                 | Key attributes                                                    |
+| -------------------- | ----------------------------------------------------------------- |
+| `file`               | path, language, content hash, size                                |
+| `module` / `package` | name, workspace path, dependencies                                |
+| `symbol`             | name, kind (function/class/type/const), file, line span, exported |
+| `test`               | path, framework, subject under test                               |
+| `migration`          | number, path, objects created/dropped                             |
+| `doc`                | path, title, kind (ADR/SOP/context)                               |
 
-| Edge | Meaning |
-| --- | --- |
-| `imports` | file → file / module |
-| `calls` | symbol → symbol |
-| `defines` | file → symbol |
-| `tests` | test → symbol / file |
-| `references` | doc → symbol / file / migration |
+| Edge         | Meaning                          |
+| ------------ | -------------------------------- |
+| `imports`    | file → file / module             |
+| `calls`      | symbol → symbol                  |
+| `defines`    | file → symbol                    |
+| `tests`      | test → symbol / file             |
+| `references` | doc → symbol / file / migration  |
 | `supersedes` | migration → migration, doc → doc |
 
 Every node carries the **commit SHA the graph was built from** and the **content
@@ -57,7 +57,7 @@ prevents the class of bug rather than diagnosing a specific incident.
 **Contamination** is any state where the graph contains facts derived from source
 that no longer exists, mixed with facts from current source, with no way to tell
 which is which. It produces confidently wrong answers — the worst failure mode
-for a memory layer, because a *missing* answer prompts a re-read while a *stale*
+for a memory layer, because a _missing_ answer prompts a re-read while a _stale_
 answer does not.
 
 Required invariants:
@@ -67,7 +67,7 @@ Required invariants:
    invalid — not "probably fine".
 2. **No partial-write visibility.** Build to a temporary location, then swap
    atomically. A reader must never observe a half-written graph. (`write to
-   graph.json.tmp` → `fsync` → `rename` — `rename(2)` is atomic within a
+graph.json.tmp` → `fsync` → `rename` — `rename(2)` is atomic within a
    filesystem.)
 3. **Generation counter.** The graph carries a monotonically increasing
    generation. Readers pin a generation for the duration of a query so a
@@ -89,17 +89,17 @@ forget that deletion is not the absence of addition.
 
 ## 4. Required capabilities
 
-| # | Capability | Definition of done |
-| --- | --- | --- |
-| 1 | Graph generation | Full build over the repository produces a graph with every node type in §2 populated |
-| 2 | Contamination-free | All six invariants in §3 hold, each with a test that fails when the invariant is removed |
-| 3 | Valid `graph.json` | Conforms to a published schema; round-trips; validated in CI |
-| 4 | Semantic retrieval | Natural-language query returns relevant nodes with provenance; measured against a fixed question set with known-good answers |
-| 5 | Incremental update | Changing N files re-derives O(N + dependents), not O(repository); result is byte-identical to a full rebuild |
-| 6 | Crash-safe resume | Kill the process at any point during a build; the next run either resumes or restarts cleanly, and never leaves a readable corrupt graph |
+| #   | Capability         | Definition of done                                                                                                                       |
+| --- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Graph generation   | Full build over the repository produces a graph with every node type in §2 populated                                                     |
+| 2   | Contamination-free | All six invariants in §3 hold, each with a test that fails when the invariant is removed                                                 |
+| 3   | Valid `graph.json` | Conforms to a published schema; round-trips; validated in CI                                                                             |
+| 4   | Semantic retrieval | Natural-language query returns relevant nodes with provenance; measured against a fixed question set with known-good answers             |
+| 5   | Incremental update | Changing N files re-derives O(N + dependents), not O(repository); result is byte-identical to a full rebuild                             |
+| 6   | Crash-safe resume  | Kill the process at any point during a build; the next run either resumes or restarts cleanly, and never leaves a readable corrupt graph |
 
 Capability 5's equivalence requirement is the important one: an incremental build
-that merely *looks* right is how contamination re-enters. Assert byte-equality
+that merely _looks_ right is how contamination re-enters. Assert byte-equality
 against a full rebuild in CI.
 
 ## 5. Reports
@@ -154,10 +154,10 @@ implementation.
 **Why it exists:** so "production-ready" has a definition that can be checked
 rather than asserted.
 
-**Concepts involved:** *content-addressed storage* (hashing source so staleness
-is detectable rather than assumed); *atomic rename* as the standard
-crash-safe-write primitive; *incremental computation* and the equivalence
-property that keeps it honest; *provenance*.
+**Concepts involved:** _content-addressed storage_ (hashing source so staleness
+is detectable rather than assumed); _atomic rename_ as the standard
+crash-safe-write primitive; _incremental computation_ and the equivalence
+property that keeps it honest; _provenance_.
 
 **Industry practice:** every serious index — Bazel's action cache, ccache,
 Language Server indexes, Sourcegraph — is built on content hashing plus atomic
@@ -169,6 +169,6 @@ that reads as valid); forgetting orphaned-edge cleanup; treating an incremental
 result as correct without ever comparing it to a full rebuild; letting the
 extractor version drift without invalidating what it produced.
 
-**Further reading:** Mokhov, Mitchell & Peyton Jones, *Build Systems à la Carte*
+**Further reading:** Mokhov, Mitchell & Peyton Jones, _Build Systems à la Carte_
 (2018) — the clearest treatment of rebuild strategies and why hashing beats
 timestamps.

@@ -1,22 +1,22 @@
 # Model Routing
 
-Status: **documentation only**, per PRIME's Phase E instruction. No feature
-implementation. Where this document describes behaviour that does not exist, it
-says so explicitly.
+Status: **partially implemented.** Gemini is a registered provider and the
+router is provider-agnostic as of the AI Independence work. Where this document
+describes behaviour that does not exist, it says so explicitly.
 
 Companion to `codebase/context/ENGINEERING_POLICY.md` (the policy) and
 `MEMORY_ARCHITECTURE.md` (where context comes from). This document is the
-*routing table*: which model does which work, and why.
+_routing table_: which model does which work, and why.
 
 ---
 
 ## 1. Responsibilities
 
-| Model | Role | Routes to it | Never route to it |
-| --- | --- | --- | --- |
-| **Claude** | Chief Architect | Architecture, system design, security review, complex reasoning, planning, agent orchestration, code review, hard debugging, teaching PRIME | Bulk indexing, mass extraction, repetitive implementation, long-document grinding |
-| **Gemini** | Processing Engine | Graphify semantic extraction, embeddings, OCR, large-document analysis, knowledge extraction, repository indexing, bulk transforms | Architecture decisions, security judgements, final review |
-| **Codex** | Software Engineer | Feature implementation, boilerplate, refactoring, unit and integration tests, doc generation, routine bug fixes | Deciding *what* to build; approving its own work |
+| Model      | Role              | Routes to it                                                                                                                                | Never route to it                                                                 |
+| ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Claude** | Chief Architect   | Architecture, system design, security review, complex reasoning, planning, agent orchestration, code review, hard debugging, teaching PRIME | Bulk indexing, mass extraction, repetitive implementation, long-document grinding |
+| **Gemini** | Processing Engine | Graphify semantic extraction, embeddings, OCR, large-document analysis, knowledge extraction, repository indexing, bulk transforms          | Architecture decisions, security judgements, final review                         |
+| **Codex**  | Software Engineer | Feature implementation, boilerplate, refactoring, unit and integration tests, doc generation, routine bug fixes                             | Deciding _what_ to build; approving its own work                                  |
 
 The workflow, stated once: **Claude designs → Codex implements → Claude
 verifies.** Gemini runs alongside as the bulk processor and never enters that
@@ -26,14 +26,14 @@ decision loop.
 
 ### By task shape
 
-| Task shape | Model | Rationale |
-| --- | --- | --- |
-| "Should we do X, and how?" | Claude | Judgement under ambiguity |
-| "Is this safe / correct?" | Claude | Verification must be independent of implementation |
-| "Build this, here's the spec" | Codex | Mechanical translation of a settled design |
-| "Extract structure from N files" | Gemini | Throughput and context length dominate |
-| "Summarise this 200-page document" | Gemini | Long-context work is its comparative advantage |
-| "Turn this into embeddings" | Gemini | Bulk, deterministic, cost-sensitive |
+| Task shape                         | Model  | Rationale                                          |
+| ---------------------------------- | ------ | -------------------------------------------------- |
+| "Should we do X, and how?"         | Claude | Judgement under ambiguity                          |
+| "Is this safe / correct?"          | Claude | Verification must be independent of implementation |
+| "Build this, here's the spec"      | Codex  | Mechanical translation of a settled design         |
+| "Extract structure from N files"   | Gemini | Throughput and context length dominate             |
+| "Summarise this 200-page document" | Gemini | Long-context work is its comparative advantage     |
+| "Turn this into embeddings"        | Gemini | Bulk, deterministic, cost-sensitive                |
 
 ### The delegation test
 
@@ -61,44 +61,39 @@ design.
 ## 3. What exists today
 
 The repository has a model router — `packages/ai/src/router.ts` — but it is
-**not** this routing table. It routes *runtime application traffic*, not
+**not** this routing table. It routes _runtime application traffic_, not
 engineering work. Stating its actual shape so the two are never confused:
 
-| Route kind | Primary provider | Model source |
-| --- | --- | --- |
-| `executive` | OpenAI | `JARVIS_MODEL_EXECUTIVE` |
-| `document` | Anthropic | `JARVIS_MODEL_DOCUMENT` |
-| `extraction` | OpenAI | `JARVIS_MODEL_EXTRACTION` |
-| `review` | Anthropic | `JARVIS_MODEL_REVIEW` |
+| Route kind   | Provider preference order       | Model source                                                                                    |
+| ------------ | ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `executive`  | OpenAI → Anthropic → Gemini     | `JARVIS_MODEL_<PROVIDER>_EXECUTIVE`, `JARVIS_MODEL_<PROVIDER>`, legacy `JARVIS_MODEL_EXECUTIVE` |
+| `document`   | Anthropic → Gemini → OpenAI     | as above, `_DOCUMENT`                                                                           |
+| `extraction` | **Gemini** → OpenAI → Anthropic | as above, `_EXTRACTION`                                                                         |
+| `review`     | Anthropic → OpenAI → Gemini     | as above, `_REVIEW`                                                                             |
 
-Properties worth knowing, verified by reading the source:
+Properties, verified against the source:
 
-- Provider selection is a static table, `ROUTE_PROVIDER`; model names come
-  exclusively from environment variables, nothing hard-coded.
-- Cross-provider fallback exists: if the primary is unconfigured or throws, the
-  other provider answers with its closest configured model, and the response
-  reports which provider actually answered.
+- **Registered providers: Anthropic, OpenAI, Gemini.** Adding a fourth means
+  implementing `AIProvider` and naming it in `ROUTE_PREFERENCE` — no structural
+  change.
+- Provider selection walks an ordered chain. `ModelRoute.chain` exposes every
+  usable provider+model in preference order; `complete()` walks it, so a route
+  fails only when every candidate has been tried.
+- Model names come exclusively from the environment. Nothing is hard-coded and
+  no provider is hard-coded as the default.
+- A model name is never lent across vendors. `LEGACY_ROUTE_ANCHOR` records which
+  provider owns each route-scoped `JARVIS_MODEL_<KIND>` variable; a provider with
+  no model of its own is skipped rather than handed another vendor's model string.
 - `isConfigured()` never throws, so a missing key degrades routing rather than
   crashing the request.
-- Registered providers: **Anthropic and OpenAI only.** There is no Gemini
-  adapter.
+- No business logic references a provider by name: `AIProviderName` is the only
+  provider type in `store.ts`, `orchestrator.ts` and `ChatUI.tsx`.
 
-### The exact gap between this document and the code
+### Still missing
 
-To add Gemini as a runtime provider, three changes are required — **none of which
-are made here**, since Phase E is documentation only:
-
-1. `AIProviderName` in `@jarvis/shared` must gain `'gemini'`.
-2. `packages/ai/src/providers/gemini.ts` must implement the `AIProvider`
-   interface (`name`, `isConfigured()`, `complete()`), matching the existing
-   adapters' direct-HTTPS style — no SDK dependency.
-3. `ROUTE_PROVIDER` and `fallbackModelFor` must be extended, and the two-provider
-   fallback assumption (`primary === 'openai' ? 'anthropic' : 'openai'`) replaced,
-   because it is hard-coded to exactly two providers today.
-
-Item 3 is the non-obvious one: the current fallback logic is not merely
-"unaware" of a third provider, it is structurally binary. Adding Gemini without
-addressing it produces silently wrong fallbacks.
+Health checks, retry with backoff, and cost tracking are **not** implemented for
+any provider. The `AIUsage` field carries token counts that nothing aggregates.
+See `GEMINI.md` §3 for the required behaviour.
 
 ## 4. Engineering-work routing is manual today
 
@@ -133,10 +128,10 @@ document) from runtime application routing (`packages/ai/src/router.ts`).
 **Why it exists:** using one model for everything is both expensive and worse —
 bulk extraction and architectural judgement reward different capabilities.
 
-**Concepts involved:** the *strategy pattern* (`AIProvider` is an interface with
+**Concepts involved:** the _strategy pattern_ (`AIProvider` is an interface with
 swappable implementations, which is why adding Gemini is additive rather than
-invasive); *graceful degradation* (`isConfigured()` never throws); *escalation
-paths* in delegated systems.
+invasive); _graceful degradation_ (`isConfigured()` never throws); _escalation
+paths_ in delegated systems.
 
 **Industry practice:** provider abstraction behind a stable interface, model
 names in configuration rather than code, and an explicit fallback policy. The
@@ -148,5 +143,5 @@ providers (present here, §3 item 3 — a real latent bug for any third provider
 routing by cost alone until a decision gets made by the cheapest model in the
 chain.
 
-**Further reading:** Gamma et al., *Design Patterns*, Strategy; Nygard,
-*Release It!*, on fallback and degradation.
+**Further reading:** Gamma et al., _Design Patterns_, Strategy; Nygard,
+_Release It!_, on fallback and degradation.

@@ -17,16 +17,16 @@ The boundary against Graphify, stated as a test rather than a slogan:
 > If deleting it loses nothing but time, it belongs in Graphify.
 > If deleting it loses something no one can reconstruct, it belongs in Obsidian.
 
-Code structure is re-derivable from code. *Why* a boundary was drawn is not — it
+Code structure is re-derivable from code. _Why_ a boundary was drawn is not — it
 exists only in someone's head until it is written down. That asymmetry is the
 whole justification for the vault.
 
-| | Graphify | Obsidian |
-| --- | --- | --- |
-| Authored by | extraction | humans |
-| Rebuildable | yes | no |
-| Answers | what/where | why |
-| On conflict with repo | repo wins | vault records intent; investigate the divergence |
+|                       | Graphify   | Obsidian                                         |
+| --------------------- | ---------- | ------------------------------------------------ |
+| Authored by           | extraction | humans                                           |
+| Rebuildable           | yes        | no                                               |
+| Answers               | what/where | why                                              |
+| On conflict with repo | repo wins  | vault records intent; investigate the divergence |
 
 Do not duplicate: the vault should not contain generated call graphs, file
 inventories, or symbol lists.
@@ -72,16 +72,20 @@ tags: [security, database]
 # ADR-0001 — Title
 
 ## Context
+
 What was true that forced a decision. Constraints, not narrative.
 
 ## Decision
+
 What we chose. Present tense, active voice.
 
 ## Consequences
+
 What this makes easy, what it makes hard, what it forecloses.
 Include the bad ones — an ADR with only upsides was not a decision.
 
 ## Alternatives considered
+
 What was rejected and why. This is the section future readers actually need.
 ```
 
@@ -104,11 +108,16 @@ review_cycle: quarterly
 # SOP — Name
 
 ## When this applies
+
 ## Prerequisites
-## Steps          ← numbered, imperative, one action each
-## Verification   ← how you know it worked
-## Failure modes  ← what commonly goes wrong and what to do
-## Escalation     ← who to involve when it does
+
+## Steps ← numbered, imperative, one action each
+
+## Verification ← how you know it worked
+
+## Failure modes ← what commonly goes wrong and what to do
+
+## Escalation ← who to involve when it does
 ```
 
 Every SOP carries a review date. An unreviewed SOP is a liability: people follow
@@ -120,7 +129,7 @@ it precisely because it looks authoritative.
 logic, seasonal patterns, local regulation.
 
 **Prohibited here as everywhere in the vault:** passwords, authentication tokens,
-phone numbers, birth dates, sex, or other identity data. Business *facts* only.
+phone numbers, birth dates, sex, or other identity data. Business _facts_ only.
 Individuals are referenced by their Supabase identifier, never by personal
 detail.
 
@@ -151,13 +160,13 @@ for an ADR. Deliberately lower-ceremony: friction here means things go unrecorde
 The vault must be queryable by agents without a human relaying content.
 Requirements:
 
-| Requirement | Detail |
-| --- | --- |
-| Read-only by default | Agents read; writes go through human review |
-| Frontmatter-filtered | Query by `type`, `tags`, `status`, `last_reviewed` |
-| Full-text + semantic | Exact match for known IDs, semantic for "why did we…" |
-| Provenance in results | Every result returns file path, `type`, and date so the caller can judge freshness |
-| Deny-list enforced | Retrieval refuses to return anything matching identity-data patterns, as defence in depth |
+| Requirement           | Detail                                                                                    |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| Read-only by default  | Agents read; writes go through human review                                               |
+| Frontmatter-filtered  | Query by `type`, `tags`, `status`, `last_reviewed`                                        |
+| Full-text + semantic  | Exact match for known IDs, semantic for "why did we…"                                     |
+| Provenance in results | Every result returns file path, `type`, and date so the caller can judge freshness        |
+| Deny-list enforced    | Retrieval refuses to return anything matching identity-data patterns, as defence in depth |
 
 The interface sits behind the Router (`MEMORY_ARCHITECTURE.md` §5) at precedence
 2 — consulted after Graphify for structural questions, before Supabase for
@@ -170,7 +179,7 @@ collapses. Suggested pattern: agents write to `00-inbox/` with
 
 ## 6. Blockers
 
-1. **No vault exists.** Creating one is a decision about *where it lives* —
+1. **No vault exists.** Creating one is a decision about _where it lives_ —
    inside this repository, a separate repository, or a synced folder outside git.
    That is PRIME's call and it has real consequences for review flow and backup.
 2. **The memory-architecture rule still defers implementation** to the
@@ -189,9 +198,9 @@ and a retrieval contract.
 **Why it exists:** decisions and reasoning have no other home. Code records what;
 only prose records why.
 
-**Concepts involved:** *ADRs* as immutable decision records; *Zettelkasten*
-influence (atomic notes, links over hierarchy); *structured frontmatter* as the
-machine-readable surface of human prose; *human-in-the-loop* as the property that
+**Concepts involved:** _ADRs_ as immutable decision records; _Zettelkasten_
+influence (atomic notes, links over hierarchy); _structured frontmatter_ as the
+machine-readable surface of human prose; _human-in-the-loop_ as the property that
 keeps an authored store from degrading into a cache.
 
 **Industry practice:** ADRs are standard in serious engineering organisations —
@@ -203,6 +212,6 @@ SOPs without review dates; letting agents write unreviewed and turning the vault
 into a low-quality cache; recording only successful decisions, so the archive
 teaches nothing about judgement.
 
-**Further reading:** Michael Nygard, *Documenting Architecture Decisions* (2011);
-Sönke Ahrens, *How to Take Smart Notes* — the reasoning behind atomic, linked
+**Further reading:** Michael Nygard, _Documenting Architecture Decisions_ (2011);
+Sönke Ahrens, _How to Take Smart Notes_ — the reasoning behind atomic, linked
 notes.

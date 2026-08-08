@@ -11,12 +11,12 @@ memory-architecture rule in `codebase/context/SECURITY_CONTEXT.md`.
 A single store cannot serve all four jobs a system like JARVIS needs, because the
 jobs have contradictory requirements:
 
-| Job | Needs | Wrong store for it |
-| --- | --- | --- |
-| "What is true right now, and who may see it?" | Transactions, constraints, row-level authorization | A graph or a folder of notes — neither can enforce RLS |
-| "How does this codebase fit together?" | Relationships, traversal, cheap re-derivation | A relational table — you'd hand-roll recursive joins |
-| "What did we decide, and why?" | Human-authored prose, durable, reviewable, diffable | A database — nobody reviews a row in a PR |
-| "Where is the 40 MB scan of the lease?" | Blob storage | Any of the above |
+| Job                                           | Needs                                               | Wrong store for it                                     |
+| --------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| "What is true right now, and who may see it?" | Transactions, constraints, row-level authorization  | A graph or a folder of notes — neither can enforce RLS |
+| "How does this codebase fit together?"        | Relationships, traversal, cheap re-derivation       | A relational table — you'd hand-roll recursive joins   |
+| "What did we decide, and why?"                | Human-authored prose, durable, reviewable, diffable | A database — nobody reviews a row in a PR              |
+| "Where is the 40 MB scan of the lease?"       | Blob storage                                        | Any of the above                                       |
 
 So: **four stores, four jobs, one rule each about what may live there.**
 
@@ -43,7 +43,7 @@ So: **four stores, four jobs, one rule each about what may live there.**
      rebuildable  reviewed     transactional    large
 ```
 
-Read the arrows as *precedence*, not as a pipeline: the Router consults cheap,
+Read the arrows as _precedence_, not as a pipeline: the Router consults cheap,
 derived sources first and falls through to expensive or authoritative ones.
 
 ## 2. Layer contracts
@@ -52,7 +52,7 @@ derived sources first and falls through to expensive or authoritative ones.
 
 - **Contains:** repository structure, symbols, call and import edges, module
   boundaries, test-to-subject links, summaries of what code does.
-- **Authority:** none. It is a *cache of understanding*. If it disagrees with the
+- **Authority:** none. It is a _cache of understanding_. If it disagrees with the
   repository, the repository wins and the graph is rebuilt.
 - **May be deleted at any time** without data loss. This is the property that
   makes it safe.
@@ -62,7 +62,7 @@ derived sources first and falls through to expensive or authoritative ones.
 ### Obsidian — human knowledge (authored)
 
 - **Contains:** ADRs, SOPs, business knowledge, learning notes, CEO notes.
-- **Authority:** it is the record of *decisions and intent*, which exist nowhere
+- **Authority:** it is the record of _decisions and intent_, which exist nowhere
   else. Code shows what was done; the vault shows why.
 - **Human-reviewed.** Nothing is written to the vault by an agent without a
   human in the loop. This is what distinguishes it from Graphify.
@@ -89,7 +89,7 @@ derived sources first and falls through to expensive or authoritative ones.
 > Identity data lives in Supabase and only in Supabase.
 
 Restating why, because it is the rule most likely to be eroded by convenience: a
-graph is rebuildable and a vault is diffable, which means both are *copied*
+graph is rebuildable and a vault is diffable, which means both are _copied_
 freely — into backups, into embeddings, into a model's context window, into a
 git history that is hard to purge. Supabase is the only layer with row-level
 authorization and an audit trail. A phone number in the graph is a phone number
@@ -111,7 +111,7 @@ first layer that answers:
 
 Two honest notes on this order:
 
-- Precedence is not a promise that earlier layers are *correct* — it is a
+- Precedence is not a promise that earlier layers are _correct_ — it is a
   statement about cost. Graphify answers cheaply; the repository answers
   definitively. When a structural claim matters for a decision, verify it
   against the repository.
@@ -123,40 +123,40 @@ Two honest notes on this order:
 
 Neither exists yet. When built:
 
-- **Coordinator** answers *what context does this task need?* It turns a task
+- **Coordinator** answers _what context does this task need?_ It turns a task
   ("review the approval transition rules") into a context request ("the SQL
   matrix, its TypeScript mirror, and the ADR that set the policy"). It is the
   component that prevents blind repository scans.
-- **Router** answers *where does that come from, and which model does the work?*
+- **Router** answers _where does that come from, and which model does the work?_
   It owns both the retrieval precedence above and the model-routing rules in
   `MODEL_ROUTING.md`. One component, two dispatch tables.
 
-Keeping them separate matters: the Coordinator is about *sufficiency* (did we
-gather enough?), the Router is about *economy* (did we use the cheapest adequate
+Keeping them separate matters: the Coordinator is about _sufficiency_ (did we
+gather enough?), the Router is about _economy_ (did we use the cheapest adequate
 source and model?). Merging them produces a component that silently trades
 correctness for cost.
 
 ## 6. Failure modes to design against
 
-| Failure | Consequence | Mitigation |
-| --- | --- | --- |
-| Stale graph | Confident wrong answers about code structure | Content-hash invalidation; graph records the commit it was built from |
-| Vault drift | ADR says one thing, code does another | ADRs reference commits; review catches divergence |
-| Identity leak into graph/vault | Uncontrolled PII with no deletion story | Extraction denylist + review; see §3 |
-| Router prefers cheap over correct | Plausible answers that fail under load | Precedence is cost-ordered, not authority-ordered — §4 note |
-| Graph treated as authoritative | Repository changes silently ignored | Graph is derived; repository always wins |
+| Failure                           | Consequence                                  | Mitigation                                                            |
+| --------------------------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| Stale graph                       | Confident wrong answers about code structure | Content-hash invalidation; graph records the commit it was built from |
+| Vault drift                       | ADR says one thing, code does another        | ADRs reference commits; review catches divergence                     |
+| Identity leak into graph/vault    | Uncontrolled PII with no deletion story      | Extraction denylist + review; see §3                                  |
+| Router prefers cheap over correct | Plausible answers that fail under load       | Precedence is cost-ordered, not authority-ordered — §4 note           |
+| Graph treated as authoritative    | Repository changes silently ignored          | Graph is derived; repository always wins                              |
 
 ## 7. Implementation status
 
-| Layer | Status |
-| --- | --- |
-| Supabase | **Live.** Migrations 0001–0011 applied to staging; RLS verified |
-| Google Drive | Adapter stub only (`packages/integrations/`), disabled in Phase 1 |
-| Graphify | **Does not exist.** See `GRAPHIFY.md` for the specification |
-| Obsidian | **Does not exist.** See `OBSIDIAN.md` for the design |
-| Coordinator | Not built |
-| Router (retrieval) | Not built |
-| Router (model) | Partially exists for AI providers only — `packages/ai/src/router.ts` |
+| Layer              | Status                                                               |
+| ------------------ | -------------------------------------------------------------------- |
+| Supabase           | **Live.** Migrations 0001–0011 applied to staging; RLS verified      |
+| Google Drive       | Adapter stub only (`packages/integrations/`), disabled in Phase 1    |
+| Graphify           | **Does not exist.** See `GRAPHIFY.md` for the specification          |
+| Obsidian           | **Does not exist.** See `OBSIDIAN.md` for the design                 |
+| Coordinator        | Not built                                                            |
+| Router (retrieval) | Not built                                                            |
+| Router (model)     | Partially exists for AI providers only — `packages/ai/src/router.ts` |
 
 ---
 
@@ -168,9 +168,9 @@ prohibition per store.
 **Why it exists:** so that "where does this fact live?" has exactly one answer,
 which is what makes the system auditable.
 
-**Concepts involved:** *system of record* vs *derived cache* (the distinction
-that makes Graphify safe to delete and Supabase not); *cache invalidation*;
-*precedence vs authority* (§4 — these are different orderings and conflating them
+**Concepts involved:** _system of record_ vs _derived cache_ (the distinction
+that makes Graphify safe to delete and Supabase not); _cache invalidation_;
+_precedence vs authority_ (§4 — these are different orderings and conflating them
 is a classic source of confident wrong answers).
 
 **Industry practice:** this mirrors the standard split between an OLTP database,
@@ -182,6 +182,6 @@ convenient; copying identity data into a cache "just for display"; building
 retrieval precedence around authority instead of cost, so every question hits the
 expensive store.
 
-**Further reading:** Martin Kleppmann, *Designing Data-Intensive Applications*,
-ch. 3 and 11 (derived data, systems of record); Nygard, *Documenting Architecture
-Decisions* (the ADR format used in `OBSIDIAN.md`).
+**Further reading:** Martin Kleppmann, _Designing Data-Intensive Applications_,
+ch. 3 and 11 (derived data, systems of record); Nygard, _Documenting Architecture
+Decisions_ (the ADR format used in `OBSIDIAN.md`).

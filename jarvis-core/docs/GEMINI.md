@@ -10,15 +10,15 @@ and a verification checklist, not a verification result.
 PRIME asked for seven items to be verified. Each was checked against the actual
 JARVIS build environment. Results:
 
-| # | Item | Result |
-| --- | --- | --- |
-| 1 | `GEMINI_API_KEY` present | **Absent.** The only AI-related variable in the environment is `ANTHROPIC_BASE_URL`. No Gemini, Google, or Vertex credential of any kind |
-| 2 | Graphify uses Gemini | **Cannot verify — neither exists.** No Graphify implementation (see `GRAPHIFY.md`), so there is no caller to inspect |
-| 3 | Rate limiting handled | **Not implemented.** No rate-limit handling exists for any provider; `packages/security/src/rate-limit.ts` is an in-memory limiter for *application* actions, unrelated to provider quotas |
-| 4 | Retry strategy | **Not implemented for Gemini.** The AI router has cross-*provider* fallback but no per-request retry or backoff |
-| 5 | Provider abstraction | **Exists, and is sound** — `AIProvider` in `packages/ai/src/types.ts`. Gemini is simply not one of its implementations |
-| 6 | Cost logging | **Not implemented.** `AIResponse.usage` carries `inputTokens`/`outputTokens` but nothing aggregates or prices it |
-| 7 | Health check | **Not implemented.** `isConfigured()` reports credential presence only — it never contacts the provider |
+| #   | Item                     | Result                                                                                                                                                                                     |
+| --- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `GEMINI_API_KEY` present | **Absent.** The only AI-related variable in the environment is `ANTHROPIC_BASE_URL`. No Gemini, Google, or Vertex credential of any kind                                                   |
+| 2   | Graphify uses Gemini     | **Cannot verify — neither exists.** No Graphify implementation (see `GRAPHIFY.md`), so there is no caller to inspect                                                                       |
+| 3   | Rate limiting handled    | **Not implemented.** No rate-limit handling exists for any provider; `packages/security/src/rate-limit.ts` is an in-memory limiter for _application_ actions, unrelated to provider quotas |
+| 4   | Retry strategy           | **Not implemented for Gemini.** The AI router has cross-_provider_ fallback but no per-request retry or backoff                                                                            |
+| 5   | Provider abstraction     | **Exists, and is sound** — `AIProvider` in `packages/ai/src/types.ts`. Gemini is simply not one of its implementations                                                                     |
+| 6   | Cost logging             | **Not implemented.** `AIResponse.usage` carries `inputTokens`/`outputTokens` but nothing aggregates or prices it                                                                           |
+| 7   | Health check             | **Not implemented.** `isConfigured()` reports credential presence only — it never contacts the provider                                                                                    |
 
 Registered providers today: **Anthropic and OpenAI.** That is the complete list.
 
@@ -36,8 +36,8 @@ never in a client bundle, never committed.
 
 ```ts
 interface AIProvider {
-  readonly name: AIProviderName   // requires 'gemini' added to the union
-  isConfigured(): boolean         // credential presence only; never throws
+  readonly name: AIProviderName // requires 'gemini' added to the union
+  isConfigured(): boolean // credential presence only; never throws
   complete(request: AIRequest): Promise<AIResponse>
 }
 ```
@@ -113,10 +113,10 @@ passes) plus the contract Gemini integration must satisfy.
 **Why it exists:** so that "verify Gemini" has a checkable answer rather than an
 assumed one. Six of seven items were not "unknown" — they were verifiably absent.
 
-**Concepts involved:** *adapter pattern* (why adding a provider is additive);
-*exponential backoff with jitter* (§3 — the jitter is the part people omit and
-the part that matters under concurrency); *liveness vs configuration checks*;
-*idempotent retry classification* — knowing which errors are worth retrying.
+**Concepts involved:** _adapter pattern_ (why adding a provider is additive);
+_exponential backoff with jitter_ (§3 — the jitter is the part people omit and
+the part that matters under concurrency); _liveness vs configuration checks_;
+_idempotent retry classification_ — knowing which errors are worth retrying.
 
 **Industry practice:** never retry 4xx except 429; always jitter; always cap
 attempts; keep provider SDKs out of the core when the HTTP surface is small —
@@ -127,5 +127,5 @@ causing thundering herds; logging prompts alongside token counts and turning
 telemetry into a data-protection problem; treating "key present" as "provider
 healthy".
 
-**Further reading:** AWS Architecture Blog, *Exponential Backoff and Jitter*;
+**Further reading:** AWS Architecture Blog, _Exponential Backoff and Jitter_;
 Google Cloud generative-AI quota documentation for the current per-model limits.

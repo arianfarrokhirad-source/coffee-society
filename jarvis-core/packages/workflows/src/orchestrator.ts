@@ -6,6 +6,7 @@ import type { AgentRow, JarvisStore } from '@jarvis/database'
 import type { AgentDefinition } from '@jarvis/permissions'
 import type {
   AgentCode,
+  AIProviderName,
   AuthorityLevel,
   BusinessCode,
   ExecutiveResponse,
@@ -56,7 +57,7 @@ export interface JarvisReply {
   requestId: string
   businessCode: BusinessCode | null
   agentCode: AgentCode
-  provider: 'anthropic' | 'openai' | 'none'
+  provider: AIProviderName | 'none'
   model: string | null
   intent: TaskClassification['intent']
   text: string
