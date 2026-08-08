@@ -25,7 +25,8 @@
     "graph:health": "tsx tools/graphify/index.ts --health",
     "vault:check": "tsx tools/vault/index.ts",
     "vault:search": "tsx tools/vault/index.ts search",
-    "vault:list": "tsx tools/vault/index.ts list"
+    "vault:list": "tsx tools/vault/index.ts list",
+    "knowledge:demo": "tsx tools/knowledge/demo.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
