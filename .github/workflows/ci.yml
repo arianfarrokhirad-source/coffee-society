@@ -71,3 +71,17 @@ jobs:
 
       - name: Codebase manifest verification
         run: npm run codebase:verify
+
+      # Graphify's automatic update. CI runs on every push and PR, so the
+      # code memory is rebuilt from the repository as it actually is —
+      # no developer has to remember to refresh it.
+      #
+      # The index itself is not committed: it is derived data, and a
+      # committed derivative is one more thing that can disagree with the
+      # source. What CI enforces is that the repository can still be
+      # indexed and that the graph is structurally sound — a broken
+      # relative import or a new import cycle fails here.
+      #
+      # Structural pass only: no API key, no spend, deterministic.
+      - name: Graphify index and health
+        run: npm run graph -- --strict

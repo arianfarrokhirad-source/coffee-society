@@ -57,6 +57,18 @@ export interface ExtractedImport {
   line: number
 }
 
+/** An invocation site: `name(` appearing outside a declaration. */
+export interface ExtractedCall {
+  name: string
+  line: number
+  /**
+   * Nearest preceding top-level declaration — the caller. Null for a
+   * call at module scope, which is a real edge (module initialisation)
+   * and must not be discarded.
+   */
+  enclosing: string | null
+}
+
 const LANGUAGE_BY_EXTENSION: Record<string, string> = {
   ts: 'typescript',
   tsx: 'typescript',
@@ -103,17 +115,56 @@ const IMPORT_PATTERNS: RegExp[] = [
   /\brequire\(\s*['"]([^'"]+)['"]\s*\)/,
 ]
 
-/** Symbols and imports, by parsing. Never calls a model. */
+/**
+ * Words followed by `(` that are syntax, not calls.
+ *
+ * Without this list every `if (`, `for (` and `catch (` becomes a call
+ * edge, and the call graph is mostly control flow.
+ */
+const CALL_KEYWORD_BLOCKLIST = new Set([
+  'if',
+  'for',
+  'while',
+  'switch',
+  'catch',
+  'return',
+  'typeof',
+  'instanceof',
+  'function',
+  'super',
+  'await',
+  'yield',
+  'void',
+  'delete',
+  'new',
+  'do',
+  'else',
+  'in',
+  'of',
+  'as',
+  'satisfies',
+  'import',
+  'require',
+  'constructor',
+  'get',
+  'set',
+])
+
+const CALL_SITE_PATTERN = /\b([A-Za-z_$][\w$]*)\s*\(/g
+
+/** Symbols, imports and call sites, by parsing. Never calls a model. */
 export function extractSymbols(file: SourceFile): {
   symbols: ExtractedSymbol[]
   imports: ExtractedImport[]
+  calls: ExtractedCall[]
 } {
   const language = file.language ?? inferLanguage(file.path)
   const symbols: ExtractedSymbol[] = []
   const imports: ExtractedImport[] = []
+  const calls: ExtractedCall[] = []
 
   if (language !== 'typescript' && language !== 'javascript') {
-    return { symbols, imports }
+    return { symbols, imports, calls }
   }
 
   const lines = file.content.split('\n')
@@ -147,16 +198,38 @@ export function extractSymbols(file: SourceFile): {
       break
     }
 
+    let declaredHere: string | null = null
     for (const { pattern, kind } of DECLARATION_PATTERNS) {
       const match = pattern.exec(raw)
       const name = match?.[2]
       if (!name) continue
       symbols.push({ name, kind, exported: match[1] !== undefined, line: i + 1 })
+      declaredHere = name
       break
+    }
+
+    // Call sites. The enclosing declaration is the nearest one seen so
+    // far, which is what makes this a graph of "who calls whom" rather
+    // than "which file mentions whom".
+    const enclosing = symbols.length > 0 ? (symbols[symbols.length - 1]?.name ?? null) : null
+    CALL_SITE_PATTERN.lastIndex = 0
+    let call: RegExpExecArray | null
+    while ((call = CALL_SITE_PATTERN.exec(raw)) !== null) {
+      const name = call[1]
+      if (!name || CALL_KEYWORD_BLOCKLIST.has(name)) continue
+      // `function foo(` is the declaration of foo, not a call to it.
+      if (name === declaredHere) continue
+      calls.push({
+        name,
+        line: i + 1,
+        // A call on the same line as its own declaration belongs to the
+        // enclosing scope, not to the symbol being declared.
+        enclosing: declaredHere !== null ? (symbols[symbols.length - 2]?.name ?? null) : enclosing,
+      })
     }
   }
 
-  return { symbols, imports }
+  return { symbols, imports, calls }
 }
 
 const moduleSummarySchema = z.object({
@@ -178,6 +251,7 @@ export interface ExtractedFile {
   lineCount: number
   symbols: ExtractedSymbol[]
   imports: ExtractedImport[]
+  calls: ExtractedCall[]
   /** Present only when AI summarisation ran and succeeded. */
   summary?: ModuleSummary
   summaryError?: string
@@ -233,7 +307,7 @@ export async function extractRepository(
   // Structural pass. Always runs, costs nothing, and is the part that
   // must never be skipped — it is the actual index.
   const extracted: ExtractedFile[] = files.map((file) => {
-    const { symbols, imports } = extractSymbols(file)
+    const { symbols, imports, calls } = extractSymbols(file)
     return {
       path: file.path,
       language: file.language ?? inferLanguage(file.path),
@@ -241,6 +315,7 @@ export async function extractRepository(
       lineCount: file.content.split('\n').length,
       symbols,
       imports,
+      calls,
     }
   })
 

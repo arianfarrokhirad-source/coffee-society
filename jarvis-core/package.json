@@ -20,12 +20,15 @@
     "test:watch": "vitest",
     "validate": "npm run typecheck && npm run lint && npm run test && npm run build",
     "codebase:generate": "node --no-warnings tools/codebase/generate.ts",
-    "codebase:verify": "node --no-warnings tools/codebase/verify.ts"
+    "codebase:verify": "node --no-warnings tools/codebase/verify.ts",
+    "graph": "tsx tools/graphify/index.ts",
+    "graph:health": "tsx tools/graphify/index.ts --health"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "eslint": "^9.17.0",
     "prettier": "^3.4.2",
+    "tsx": "^4.23.11",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.0",
     "vitest": "^3.0.0"
