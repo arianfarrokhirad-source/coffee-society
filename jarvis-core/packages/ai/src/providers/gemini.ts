@@ -32,6 +32,19 @@ interface GeminiResponse {
   }
 }
 
+/**
+ * Retry-After is either delta-seconds or an HTTP date. Both appear in
+ * the wild; a parser that handles only one silently ignores the other.
+ */
+function parseRetryAfter(header: string | null): number | null {
+  if (!header) return null
+  const seconds = Number(header)
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.round(seconds * 1000)
+  const when = Date.parse(header)
+  if (Number.isNaN(when)) return null
+  return Math.max(0, when - Date.now())
+}
+
 export function createGeminiProvider(options?: {
   apiKey?: string
   baseUrl?: string
@@ -102,7 +115,8 @@ export function createGeminiProvider(options?: {
         throw new AIProviderError(
           'gemini',
           `Gemini API error ${response.status}: ${body.slice(0, 500)}`,
-          response.status
+          response.status,
+          parseRetryAfter(response.headers.get('retry-after'))
         )
       }
 

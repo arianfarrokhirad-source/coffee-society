@@ -1,5 +1,6 @@
 import { AI_PROVIDERS, type AIProviderName } from '@jarvis/shared'
 import { err, ok, type Result } from '@jarvis/shared'
+import { withRetry, type RetryPolicy } from './retry'
 import type { AIProvider, AIRequest, AIResponse, ModelRoute, RouteKind } from './types'
 
 // ---------------------------------------------------------------------
@@ -147,14 +148,42 @@ export function readRouterEnv(): RouterEnv {
   }
 }
 
+/** What one route resolution actually cost, for usage tracking. */
+export interface RouteAttemptStats {
+  provider: AIProviderName
+  model: string
+  attempts: number
+  retries: number
+  totalDelayMs: number
+  succeeded: boolean
+}
+
+export interface CompleteResult {
+  response: AIResponse
+  /** Per-provider attempt records, in the order they were tried. */
+  stats: RouteAttemptStats[]
+}
+
 export interface AIRouter {
   resolveRoute(kind: RouteKind): Result<ModelRoute>
   complete(kind: RouteKind, request: Omit<AIRequest, 'model'>): Promise<Result<AIResponse>>
+  /**
+   * Same as complete(), but also reports what each provider attempt
+   * cost. Retries are a cost signal; a bare response discards them.
+   */
+  completeWithStats(
+    kind: RouteKind,
+    request: Omit<AIRequest, 'model'>
+  ): Promise<Result<CompleteResult>>
   /** Names of providers with credentials configured. */
   availableProviders(): AIProviderName[]
 }
 
-export function createRouter(providers: AIProvider[], env?: RouterEnv): AIRouter {
+export function createRouter(
+  providers: AIProvider[],
+  env?: RouterEnv,
+  retryPolicy?: RetryPolicy
+): AIRouter {
   const byName = new Map<AIProviderName, AIProvider>(providers.map((p) => [p.name, p]))
   const routerEnv = env ?? readRouterEnv()
 
@@ -188,24 +217,43 @@ export function createRouter(providers: AIProvider[], env?: RouterEnv): AIRouter
     })
   }
 
-  async function complete(
+  async function completeWithStats(
     kind: RouteKind,
     request: Omit<AIRequest, 'model'>
-  ): Promise<Result<AIResponse>> {
+  ): Promise<Result<CompleteResult>> {
     const route = resolveRoute(kind)
     if (!route.ok) return route
 
     const failures: string[] = []
+    const stats: RouteAttemptStats[] = []
+
     for (const candidate of route.value.chain) {
       const provider = byName.get(candidate.provider)
       if (!provider) continue
-      try {
-        return ok(await provider.complete({ ...request, model: candidate.model }))
-      } catch (cause) {
-        failures.push(
-          `${candidate.provider}: ${cause instanceof Error ? cause.message : 'unknown error'}`
-        )
-      }
+
+      // Each provider gets its own attempt budget. Transient failures are
+      // retried in place; a deterministic failure moves straight on to
+      // the next provider rather than burning the budget.
+      const outcome = await withRetry(
+        () => provider.complete({ ...request, model: candidate.model }),
+        retryPolicy
+      )
+
+      stats.push({
+        provider: candidate.provider,
+        model: candidate.model,
+        attempts: outcome.attempts,
+        retries: outcome.retries,
+        totalDelayMs: outcome.totalDelayMs,
+        succeeded: outcome.ok,
+      })
+
+      if (outcome.ok && outcome.value) return ok({ response: outcome.value, stats })
+
+      const cause = outcome.error
+      failures.push(
+        `${candidate.provider}: ${cause instanceof Error ? cause.message : 'unknown error'}`
+      )
     }
 
     // Wording is provider-count agnostic: this router is no longer
@@ -214,9 +262,18 @@ export function createRouter(providers: AIProvider[], env?: RouterEnv): AIRouter
     return err(`All providers failed for route '${kind}'. ${failures.join('; ')}`)
   }
 
+  async function complete(
+    kind: RouteKind,
+    request: Omit<AIRequest, 'model'>
+  ): Promise<Result<AIResponse>> {
+    const result = await completeWithStats(kind, request)
+    return result.ok ? ok(result.value.response) : result
+  }
+
   return {
     resolveRoute,
     complete,
+    completeWithStats,
     availableProviders: () => providers.filter((p) => p.isConfigured()).map((p) => p.name),
   }
 }

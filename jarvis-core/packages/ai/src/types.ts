@@ -144,10 +144,22 @@ export interface ToolResult {
 export class AIProviderError extends Error {
   provider: AIProviderName
   status: number | null
-  constructor(provider: AIProviderName, message: string, status: number | null = null) {
+  /**
+   * Milliseconds the provider asked us to wait, parsed from Retry-After.
+   * Null when the provider did not say. The retry layer prefers this over
+   * its own backoff: the provider knows its quota window and we do not.
+   */
+  retryAfterMs: number | null
+  constructor(
+    provider: AIProviderName,
+    message: string,
+    status: number | null = null,
+    retryAfterMs: number | null = null
+  ) {
     super(message)
     this.name = 'AIProviderError'
     this.provider = provider
     this.status = status
+    this.retryAfterMs = retryAfterMs
   }
 }

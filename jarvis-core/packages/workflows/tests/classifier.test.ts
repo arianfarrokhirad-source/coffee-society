@@ -76,6 +76,9 @@ describe('classifyRequest fallback', () => {
       complete: () => {
         throw new Error('router must not be called')
       },
+      completeWithStats: () => {
+        throw new Error('router must not be called')
+      },
       availableProviders: () => [],
     })
     expect(source).toBe('rules')
