@@ -132,7 +132,20 @@ export function classifyAuthError(
   if (status >= 500) return 'database_error'
   if (status === 422) return 'invalid_email'
 
-  // 400/401 means "bad credentials" ONLY when credentials were being
+  // 401 with NO code is the signature of the Supabase API gateway
+  // rejecting the apikey, before GoTrue is reached at all. Every genuine
+  // GoTrue refusal carries a code, and a wrong password is 400
+  // `invalid_credentials`, never 401. So this is a deployment
+  // misconfiguration — an anon key that does not belong to the project
+  // in NEXT_PUBLIC_SUPABASE_URL, or one that is expired or revoked.
+  //
+  // Reporting it as `unknown` (registration) or `invalid_credentials`
+  // (sign-in) was actively harmful: the first is undiagnosable and the
+  // second blames the user's password for a broken deployment, which no
+  // amount of retyping can fix.
+  if (status === 401 && !code) return 'configuration'
+
+  // 400 means "bad credentials" ONLY when credentials were being
   // checked. During registration there is nothing to authenticate yet,
   // so an unmapped 4xx is genuinely unknown and must say so — reporting
   // it as invalid credentials sends the user to fix a password that was

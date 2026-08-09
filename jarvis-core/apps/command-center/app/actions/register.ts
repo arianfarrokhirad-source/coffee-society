@@ -6,6 +6,32 @@ import { getStore } from '@/lib/jarvis'
 import { createUserClient } from '@/lib/supabase/server'
 import { explainAuthError, isObfuscatedExistingUser } from '@/lib/auth-errors'
 import { buildSignupMetadata, firstFieldError, registrationSchema } from '@/lib/registration'
+import {
+  configurationIsBroken,
+  describeConfigForLog,
+  readSupabaseConfigStatus,
+} from '@/lib/supabase/config'
+
+/**
+ * Named stages, so a failed registration can be located from server logs
+ * without a debugger and without another round trip.
+ *
+ * There is deliberately no REGISTER_PROFILE_CREATE call: the profile row
+ * is created by the handle_new_user trigger inside the same transaction
+ * as the auth user (migration 0011), not by a second request from here.
+ * A trigger failure therefore surfaces as HTTP 500 on the signup itself
+ * and is already classified as `database_error` — it can never present
+ * as a 401.
+ */
+const STAGE = {
+  signup: 'REGISTER_AUTH_SIGNUP',
+  postSignup: 'REGISTER_POST_SIGNUP',
+} as const
+
+/** Structured, PII-free. Never carries email, name, phone or password. */
+function logStage(stage: string, fields: Record<string, unknown>): void {
+  console.error(JSON.stringify({ level: 'info', event: 'register.stage', stage, ...fields }))
+}
 
 // ---------------------------------------------------------------------
 // Registration.
@@ -76,7 +102,44 @@ export async function register(
     password: parsed.data.password,
     options: { data: buildSignupMetadata(parsed.data) },
   })
-  if (error) return { error: explainAuthError(error, 'sign_up').message, values, attempt }
+
+  if (error) {
+    const explained = explainAuthError(error, 'sign_up')
+
+    // The configuration snapshot is only read on failure, and only ever
+    // reaches the server log. It answers the question a status code
+    // cannot: is this deployment pointed at the right project with a key
+    // that belongs to it?
+    const config = readSupabaseConfigStatus()
+    logStage(STAGE.signup, {
+      outcome: 'error',
+      status: error.status ?? null,
+      code: error.code ?? null,
+      kind: explained.kind,
+      ...describeConfigForLog(config),
+    })
+
+    // A proven configuration fault outranks the status-based guess: when
+    // the key demonstrably does not belong to the project, saying so is
+    // strictly more useful than "not one we recognise".
+    if (configurationIsBroken(config) && explained.kind === 'unknown') {
+      return {
+        error: explainAuthError({ ...error, status: 401, code: null }, 'sign_up').message,
+        values,
+        attempt,
+      }
+    }
+
+    return { error: explained.message, values, attempt }
+  }
+
+  logStage(STAGE.signup, {
+    outcome: 'ok',
+    // Whether a session came back distinguishes "email confirmation off"
+    // from "confirmation required", which changes what happens next.
+    session: Boolean(data.session),
+    user: Boolean(data.user),
+  })
 
   // Telemetry only, and best-effort: a failure here must never undo an
   // account that already exists. Actor id only — no profile fields.
@@ -89,14 +152,13 @@ export async function register(
       })
     )
   } catch (cause) {
-    console.error(
-      JSON.stringify({
-        level: 'error',
-        event: 'auth.telemetry_failed',
-        action: 'auth.sign_up',
-        reason: cause instanceof Error ? cause.message : 'unknown',
-      })
-    )
+    // Deliberately not surfaced to the user: the account exists, and a
+    // telemetry failure is not a registration failure. Historically this
+    // is the stage most often mistaken for one.
+    logStage(STAGE.postSignup, {
+      outcome: 'audit_failed',
+      reason: cause instanceof Error ? cause.message : 'unknown',
+    })
   }
 
   // Email confirmation disabled: a session is issued immediately.

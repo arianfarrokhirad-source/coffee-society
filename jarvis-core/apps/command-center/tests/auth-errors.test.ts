@@ -165,7 +165,9 @@ describe('a credential verdict can never come from registration', () => {
 
   it('still returns invalid_credentials for the same errors during sign-in', () => {
     expect(classifyAuthError({ status: 400 }, 'sign_in')).toBe('invalid_credentials')
-    expect(classifyAuthError({ status: 401 }, 'sign_in')).toBe('invalid_credentials')
+    // 401 is deliberately absent here: a bare 401 is a gateway apikey
+    // rejection, not a password verdict, and now classifies as
+    // `configuration` for BOTH operations. See the block below.
     expect(classifyAuthError({ code: 'invalid_credentials' }, 'sign_in')).toBe(
       'invalid_credentials'
     )

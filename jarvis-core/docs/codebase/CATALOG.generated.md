@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `d4eecb3`. **Grep this file; do not read it whole.**
+Generated from commit `c270066`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -11,7 +11,7 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
 | `ai` | `packages/ai` | sensitive | changing | shared | command-center, graphify, workflows | 11 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, graphify, integrations, obsidian, permissions, reporting, security, shared, ui, workflows | — | 18 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, graphify, integrations, obsidian, permissions, reporting, security, shared, ui, workflows | — | 19 |
 | `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
 | `graphify` | `packages/graphify` | ordinary | changing | ai, shared | command-center | 3 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |

@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-09T22:09:12.399Z",
-  "repositoryCommit": "d4eecb30fb60b624649cf9840b127296b5a98629",
+  "generatedAt": "2026-08-09T22:17:52.817Z",
+  "repositoryCommit": "c270066b508dca27523657b552d7b32117c2246d",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -118,7 +118,8 @@
         "apps/command-center/tests/money.test.ts",
         "apps/command-center/tests/prime-claim.test.ts",
         "apps/command-center/tests/provider-wiring.test.ts",
-        "apps/command-center/tests/registration.test.ts"
+        "apps/command-center/tests/registration.test.ts",
+        "apps/command-center/tests/supabase-config.test.ts"
       ],
       "purpose": "Next.js App Router Command Centre: pages, server actions, API routes, auth middleware.",
       "securitySensitivity": "critical",
@@ -930,6 +931,7 @@
     "apps/command-center/tests/prime-claim.test.ts",
     "apps/command-center/tests/provider-wiring.test.ts",
     "apps/command-center/tests/registration.test.ts",
+    "apps/command-center/tests/supabase-config.test.ts",
     "packages/ai/tests/batch.test.ts",
     "packages/ai/tests/chunking.test.ts",
     "packages/ai/tests/embeddings.test.ts",

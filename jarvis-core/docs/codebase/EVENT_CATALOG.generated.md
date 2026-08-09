@@ -2,7 +2,7 @@
 
 # Event catalog (generated)
 
-Generated from commit `d4eecb3`. Event names and
+Generated from commit `c270066`. Event names and
 producers are discovered in source; consumers, delivery guarantee and security
 class come from `tools/codebase/annotations.json` because they cannot be derived
 mechanically. `codebase:verify` fails when an event in code has no annotation.

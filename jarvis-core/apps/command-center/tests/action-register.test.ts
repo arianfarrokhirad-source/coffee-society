@@ -116,7 +116,10 @@ describe('registration never reports a credential verdict', () => {
 
       const state = await register(initial, form())
       expect(state.error).not.toMatch(/credentials are not valid/i)
-      expect(state.error).toMatch(/not necessarily anything you typed/i)
+      // Either wording is acceptable; what matters is that neither
+      // blames the user's credentials. A bare 401 now reports a
+      // deployment misconfiguration, which is more specific.
+      expect(state.error).toMatch(/not necessarily anything you typed|not configured correctly/i)
       // A diagnostic must survive so the failure is actionable.
       expect(state.error).toMatch(/\((code|status): /)
     }
