@@ -1,5 +1,6 @@
 import { Badge, Card, EmptyState, StatTile } from '@jarvis/ui'
 import { ProposalActions, ProposalForm } from '@/components/crm'
+import { money, sumByCurrency } from '@/lib/money'
 import { createUserClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -44,27 +45,9 @@ const STATUS_TONE: Record<string, 'ok' | 'warn' | 'danger' | 'muted'> = {
 /** Open = still capable of becoming revenue. */
 const OPEN = new Set(['draft', 'pending_approval', 'approved', 'sent'])
 
-function money(amount: string | number | null, currency: string): string {
-  if (amount == null) return '—'
-  const value = typeof amount === 'string' ? Number(amount) : amount
-  if (!Number.isFinite(value)) return '—'
-  try {
-    return new Intl.NumberFormat('en-IE', { style: 'currency', currency }).format(value)
-  } catch {
-    // An unexpected currency code must not blank the whole page.
-    return `${value.toFixed(2)} ${currency}`
-  }
-}
-
-/** Sums only same-currency proposals; mixing currencies would be a lie. */
+/** Adapts proposal rows onto the shared per-currency sum. */
 function totalsByCurrency(rows: ProposalRow[]): { currency: string; total: number }[] {
-  const sums = new Map<string, number>()
-  for (const row of rows) {
-    const value = typeof row.total_amount === 'string' ? Number(row.total_amount) : row.total_amount
-    if (value == null || !Number.isFinite(value)) continue
-    sums.set(row.currency, (sums.get(row.currency) ?? 0) + value)
-  }
-  return [...sums.entries()].map(([currency, total]) => ({ currency, total }))
+  return sumByCurrency(rows.map((row) => ({ amount: row.total_amount, currency: row.currency })))
 }
 
 export default async function ProposalsPage() {
