@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generatedAt": "2026-08-08T18:11:17.033Z",
-  "repositoryCommit": "1115a34c8665f2d0a35b61bac1e96363813610ba",
+  "generatedAt": "2026-08-09T22:09:12.399Z",
+  "repositoryCommit": "d4eecb30fb60b624649cf9840b127296b5a98629",
   "_generated": [
     "modules (except purpose/securitySensitivity/stability)",
     "databaseMigrations",
@@ -40,7 +40,12 @@
       "name": "@jarvis/ai",
       "path": "packages/ai",
       "exports": [
+        "* ./batch",
+        "* ./chunking",
+        "* ./embeddings",
         "* ./health",
+        "* ./pipelines/document",
+        "* ./pipelines/repository",
         "* ./pricing",
         "* ./retry",
         "* ./router",
@@ -56,11 +61,17 @@
       ],
       "consumers": [
         "@jarvis/command-center",
+        "@jarvis/graphify",
         "@jarvis/workflows"
       ],
       "tests": [
+        "packages/ai/tests/batch.test.ts",
+        "packages/ai/tests/chunking.test.ts",
+        "packages/ai/tests/embeddings.test.ts",
+        "packages/ai/tests/gemini-embeddings.test.ts",
         "packages/ai/tests/gemini.test.ts",
         "packages/ai/tests/health.test.ts",
+        "packages/ai/tests/pipelines.test.ts",
         "packages/ai/tests/retry.test.ts",
         "packages/ai/tests/router.test.ts",
         "packages/ai/tests/structured.test.ts",
@@ -78,7 +89,9 @@
         "@jarvis/agents",
         "@jarvis/ai",
         "@jarvis/database",
+        "@jarvis/graphify",
         "@jarvis/integrations",
+        "@jarvis/obsidian",
         "@jarvis/permissions",
         "@jarvis/reporting",
         "@jarvis/security",
@@ -91,6 +104,8 @@
         "apps/command-center/tests/action-audits.test.ts",
         "apps/command-center/tests/action-crm.test.ts",
         "apps/command-center/tests/action-delivery.test.ts",
+        "apps/command-center/tests/action-documents.test.ts",
+        "apps/command-center/tests/action-maintenance.test.ts",
         "apps/command-center/tests/action-prime-claim.test.ts",
         "apps/command-center/tests/action-proposals.test.ts",
         "apps/command-center/tests/action-register.test.ts",
@@ -98,7 +113,9 @@
         "apps/command-center/tests/approval-transitions.test.ts",
         "apps/command-center/tests/auth-errors.test.ts",
         "apps/command-center/tests/cron-auth.test.ts",
+        "apps/command-center/tests/knowledge-integration.test.ts",
         "apps/command-center/tests/middleware-auth.test.ts",
+        "apps/command-center/tests/money.test.ts",
         "apps/command-center/tests/prime-claim.test.ts",
         "apps/command-center/tests/provider-wiring.test.ts",
         "apps/command-center/tests/registration.test.ts"
@@ -134,6 +151,33 @@
       "stability": "changing"
     },
     {
+      "name": "@jarvis/graphify",
+      "path": "packages/graphify",
+      "exports": [
+        "* ./graph",
+        "* ./indexer",
+        "* ./report",
+        "* ./state",
+        "* ./types",
+        "* ./walk"
+      ],
+      "dependsOn": [
+        "@jarvis/ai",
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center"
+      ],
+      "tests": [
+        "packages/graphify/tests/graph.test.ts",
+        "packages/graphify/tests/indexer.test.ts",
+        "packages/graphify/tests/state.test.ts"
+      ],
+      "purpose": "UNANNOTATED — add to tools/codebase/annotations.json",
+      "securitySensitivity": "ordinary",
+      "stability": "changing"
+    },
+    {
       "name": "@jarvis/integrations",
       "path": "packages/integrations",
       "exports": [
@@ -153,6 +197,31 @@
       "purpose": "External adapter contract and seven disabled placeholder adapters.",
       "securitySensitivity": "sensitive",
       "stability": "stable"
+    },
+    {
+      "name": "@jarvis/obsidian",
+      "path": "packages/obsidian",
+      "exports": [
+        "* ./frontmatter",
+        "* ./fs",
+        "* ./guard",
+        "* ./templates",
+        "* ./types",
+        "* ./vault"
+      ],
+      "dependsOn": [
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center"
+      ],
+      "tests": [
+        "packages/obsidian/tests/frontmatter.test.ts",
+        "packages/obsidian/tests/vault.test.ts"
+      ],
+      "purpose": "UNANNOTATED — add to tools/codebase/annotations.json",
+      "securitySensitivity": "ordinary",
+      "stability": "changing"
     },
     {
       "name": "@jarvis/permissions",
@@ -243,7 +312,9 @@
         "@jarvis/ai",
         "@jarvis/command-center",
         "@jarvis/database",
+        "@jarvis/graphify",
         "@jarvis/integrations",
+        "@jarvis/obsidian",
         "@jarvis/permissions",
         "@jarvis/reporting",
         "@jarvis/security",
@@ -590,6 +661,10 @@
     {
       "path": "supabase/migrations/0011_profile_identity.sql",
       "sha256": "02ae3b6922be2c06c03e987e6f1b1a52d57015f7e980cf9e5498efe495bbbc2a"
+    },
+    {
+      "path": "supabase/migrations/0012_document_version_insert.sql",
+      "sha256": "335efd11c5cb33531beb2277e19708eb9bd9289dd25944eeadab42d6fdadaf63"
     }
   ],
   "agents": [
@@ -744,8 +819,18 @@
       "kind": "page"
     },
     {
+      "route": "/knowledge/[documentId]",
+      "path": "apps/command-center/app/knowledge/[documentId]/page.tsx",
+      "kind": "page"
+    },
+    {
       "route": "/login",
       "path": "apps/command-center/app/login/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/maintenance",
+      "path": "apps/command-center/app/maintenance/page.tsx",
       "kind": "page"
     },
     {
@@ -830,6 +915,8 @@
     "apps/command-center/tests/action-audits.test.ts",
     "apps/command-center/tests/action-crm.test.ts",
     "apps/command-center/tests/action-delivery.test.ts",
+    "apps/command-center/tests/action-documents.test.ts",
+    "apps/command-center/tests/action-maintenance.test.ts",
     "apps/command-center/tests/action-prime-claim.test.ts",
     "apps/command-center/tests/action-proposals.test.ts",
     "apps/command-center/tests/action-register.test.ts",
@@ -837,18 +924,30 @@
     "apps/command-center/tests/approval-transitions.test.ts",
     "apps/command-center/tests/auth-errors.test.ts",
     "apps/command-center/tests/cron-auth.test.ts",
+    "apps/command-center/tests/knowledge-integration.test.ts",
     "apps/command-center/tests/middleware-auth.test.ts",
+    "apps/command-center/tests/money.test.ts",
     "apps/command-center/tests/prime-claim.test.ts",
     "apps/command-center/tests/provider-wiring.test.ts",
     "apps/command-center/tests/registration.test.ts",
+    "packages/ai/tests/batch.test.ts",
+    "packages/ai/tests/chunking.test.ts",
+    "packages/ai/tests/embeddings.test.ts",
+    "packages/ai/tests/gemini-embeddings.test.ts",
     "packages/ai/tests/gemini.test.ts",
     "packages/ai/tests/health.test.ts",
+    "packages/ai/tests/pipelines.test.ts",
     "packages/ai/tests/retry.test.ts",
     "packages/ai/tests/router.test.ts",
     "packages/ai/tests/structured.test.ts",
     "packages/ai/tests/usage.test.ts",
     "packages/database/tests/critical-audit.test.ts",
+    "packages/graphify/tests/graph.test.ts",
+    "packages/graphify/tests/indexer.test.ts",
+    "packages/graphify/tests/state.test.ts",
     "packages/integrations/tests/integrations.test.ts",
+    "packages/obsidian/tests/frontmatter.test.ts",
+    "packages/obsidian/tests/vault.test.ts",
     "packages/permissions/tests/agent-scope.test.ts",
     "packages/permissions/tests/authority.test.ts",
     "packages/permissions/tests/policy.test.ts",
@@ -892,7 +991,15 @@
     },
     {
       "from": "@jarvis/command-center",
+      "to": "@jarvis/graphify"
+    },
+    {
+      "from": "@jarvis/command-center",
       "to": "@jarvis/integrations"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/obsidian"
     },
     {
       "from": "@jarvis/command-center",
@@ -923,11 +1030,23 @@
       "to": "@jarvis/shared"
     },
     {
+      "from": "@jarvis/graphify",
+      "to": "@jarvis/ai"
+    },
+    {
+      "from": "@jarvis/graphify",
+      "to": "@jarvis/shared"
+    },
+    {
       "from": "@jarvis/integrations",
       "to": "@jarvis/security"
     },
     {
       "from": "@jarvis/integrations",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/obsidian",
       "to": "@jarvis/shared"
     },
     {
@@ -1154,7 +1273,7 @@
         "apps/command-center/app/actions/crm.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1178,13 +1297,43 @@
       "securityClass": "operational"
     },
     {
+      "name": "document.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/documents.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "document.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/documents.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "document.version_added",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/documents.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
       "name": "lead.created",
       "kind": "audit_action",
       "producers": [
         "apps/command-center/app/actions/crm.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1195,7 +1344,27 @@
         "apps/command-center/app/actions/crm.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "maintenance_plan.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/maintenance.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "maintenance_plan.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/maintenance.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1276,7 +1445,7 @@
         "apps/command-center/app/actions/crm.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1286,7 +1455,7 @@
         "apps/command-center/app/actions/crm.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1326,7 +1495,7 @@
         "apps/command-center/app/actions/audits.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1336,7 +1505,7 @@
         "apps/command-center/app/actions/audits.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1346,7 +1515,7 @@
         "apps/command-center/app/actions/delivery.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     },
     {
@@ -1356,8 +1525,8 @@
         "apps/command-center/app/actions/delivery.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
-      "securityClass": "operational"
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
     },
     {
       "name": "website_project.stage_changed",
@@ -1366,7 +1535,7 @@
         "apps/command-center/app/actions/delivery.ts"
       ],
       "consumers": [],
-      "guarantee": "unknown",
+      "guarantee": "best_effort",
       "securityClass": "operational"
     }
   ]

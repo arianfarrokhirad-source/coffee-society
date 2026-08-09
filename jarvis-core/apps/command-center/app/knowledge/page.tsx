@@ -1,4 +1,6 @@
+import Link from 'next/link'
 import { Badge, Card, EmptyState, StatTile } from '@jarvis/ui'
+import { DocumentForm } from '@/components/documents'
 import { readGraph, readVault } from '@/lib/knowledge'
 import { createUserClient } from '@/lib/supabase/server'
 
@@ -31,8 +33,9 @@ export default async function KnowledgePage({
 
   // The three stores are independent and none is allowed to block the
   // others: a missing code index must not hide the documents.
-  const [{ data: documents }, vault, graph] = await Promise.all([
+  const [{ data: documents }, { data: businesses }, vault, graph] = await Promise.all([
     query,
+    supabase.from('businesses').select('id, code').order('code').limit(100),
     readVault(term),
     readGraph(),
   ])
@@ -93,7 +96,11 @@ export default async function KnowledgePage({
             <tbody>
               {(documents ?? []).map((d) => (
                 <tr key={d.id}>
-                  <td>{d.title}</td>
+                  <td>
+                    <Link href={`/knowledge/${d.id}`} className="underline">
+                      {d.title}
+                    </Link>
+                  </td>
                   <td className="text-muted">
                     {(d.businesses as { code?: string } | null)?.code ?? 'Org'}
                   </td>
@@ -113,6 +120,10 @@ export default async function KnowledgePage({
             </tbody>
           </table>
         )}
+      </Card>
+
+      <Card title="New document">
+        <DocumentForm businesses={businesses ?? []} />
       </Card>
 
       <Card title="Decisions and procedures">

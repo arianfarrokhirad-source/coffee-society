@@ -2,7 +2,7 @@
 
 # Event catalog (generated)
 
-Generated from commit `1115a34`. Event names and
+Generated from commit `d4eecb3`. Event names and
 producers are discovered in source; consumers, delivery guarantee and security
 class come from `tools/codebase/annotations.json` because they cannot be derived
 mechanically. `codebase:verify` fails when an event in code has no annotation.
@@ -42,9 +42,14 @@ Written to `audit_logs` (append-only). `atomic` means the row commits in the sam
 | `auth.sign_up` | `apps/command-center/app/actions/register.ts` | none — recorded only | best effort | security-relevant |
 | `brief.generated` | `apps/command-center/app/actions/brief.ts` | none — recorded only | best effort | telemetry |
 | `brief.generated.cron` | `apps/command-center/app/api/cron/daily-brief/route.ts` | none — recorded only | best effort | telemetry |
-| `client.created` | `apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
-| `lead.created` | `apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
-| `lead.status_changed` | `apps/command-center/app/actions/audits.ts`<br>`apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
+| `client.created` | `apps/command-center/app/actions/crm.ts` | none — recorded only | best effort | operational |
+| `document.created` | `apps/command-center/app/actions/documents.ts` | none — recorded only | best effort | operational |
+| `document.status_changed` | `apps/command-center/app/actions/documents.ts` | none — recorded only | best effort | operational |
+| `document.version_added` | `apps/command-center/app/actions/documents.ts` | none — recorded only | best effort | operational |
+| `lead.created` | `apps/command-center/app/actions/crm.ts` | none — recorded only | best effort | operational |
+| `lead.status_changed` | `apps/command-center/app/actions/audits.ts`<br>`apps/command-center/app/actions/crm.ts` | none — recorded only | best effort | operational |
+| `maintenance_plan.created` | `apps/command-center/app/actions/maintenance.ts` | none — recorded only | best effort | operational |
+| `maintenance_plan.status_changed` | `apps/command-center/app/actions/maintenance.ts` | none — recorded only | best effort | operational |
 | `membership.created` | `supabase/migrations/0010_critical_auditing.sql` | none — recorded only | atomic with state change | security-relevant |
 | `membership.revoked` | `supabase/migrations/0010_critical_auditing.sql` | none — recorded only | atomic with state change | security-relevant |
 | `membership.role_changed` | `supabase/migrations/0010_critical_auditing.sql` | none — recorded only | atomic with state change | security-relevant |
@@ -52,12 +57,12 @@ Written to `audit_logs` (append-only). `atomic` means the row commits in the sam
 | `prime.claim_denied` | `apps/command-center/app/actions/auth.ts` | none — recorded only | best effort | security-relevant |
 | `prime.claimed` | `supabase/migrations/0007_rls.sql`<br>`supabase/migrations/0009_prime_bootstrap.sql` | none — recorded only | atomic with state change | security-relevant |
 | `project.created` | `apps/command-center/app/actions/work.ts` | none — recorded only | best effort | operational |
-| `proposal.created` | `apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
-| `proposal.status_changed` | `apps/command-center/app/actions/crm.ts` | none — recorded only | **unannotated** | operational |
+| `proposal.created` | `apps/command-center/app/actions/crm.ts` | none — recorded only | best effort | operational |
+| `proposal.status_changed` | `apps/command-center/app/actions/crm.ts` | none — recorded only | best effort | operational |
 | `task.status_changed` | `apps/command-center/app/actions/work.ts` | none — recorded only | best effort | operational |
 | `tool.executed` | `packages/workflows/src/tools.ts` | none — recorded only | best effort | operational |
-| `website_audit.completed` | `apps/command-center/app/actions/audits.ts` | none — recorded only | **unannotated** | operational |
-| `website_audit.created` | `apps/command-center/app/actions/audits.ts` | none — recorded only | **unannotated** | operational |
-| `website_project.created` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | **unannotated** | operational |
-| `website_project.deployed` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | **unannotated** | operational |
-| `website_project.stage_changed` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | **unannotated** | operational |
+| `website_audit.completed` | `apps/command-center/app/actions/audits.ts` | none — recorded only | best effort | operational |
+| `website_audit.created` | `apps/command-center/app/actions/audits.ts` | none — recorded only | best effort | operational |
+| `website_project.created` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | best effort | operational |
+| `website_project.deployed` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | best effort | security-relevant |
+| `website_project.stage_changed` | `apps/command-center/app/actions/delivery.ts` | none — recorded only | best effort | operational |

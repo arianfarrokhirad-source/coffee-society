@@ -2,7 +2,7 @@
 
 # Catalog (generated)
 
-Generated from commit `1115a34`. **Grep this file; do not read it whole.**
+Generated from commit `d4eecb3`. **Grep this file; do not read it whole.**
 Purpose, security sensitivity and stability come from `tools/codebase/annotations.json`.
 
 ## Modules
@@ -10,14 +10,16 @@ Purpose, security sensitivity and stability come from `tools/codebase/annotation
 | Module | Path | Sensitivity | Stability | Depends on | Consumers | Tests |
 | --- | --- | --- | --- | --- | --- | --- |
 | `agents` | `agents` | sensitive | stable | shared | command-center, workflows | 0 |
-| `ai` | `packages/ai` | sensitive | changing | shared | command-center, workflows | 6 |
-| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, integrations, permissions, reporting, security, shared, ui, workflows | — | 14 |
+| `ai` | `packages/ai` | sensitive | changing | shared | command-center, graphify, workflows | 11 |
+| `command-center` | `apps/command-center` | critical | changing | agents, ai, database, graphify, integrations, obsidian, permissions, reporting, security, shared, ui, workflows | — | 18 |
 | `database` | `packages/database` | critical | changing | shared | command-center, reporting, workflows | 1 |
+| `graphify` | `packages/graphify` | ordinary | changing | ai, shared | command-center | 3 |
 | `integrations` | `packages/integrations` | sensitive | stable | security, shared | command-center | 1 |
+| `obsidian` | `packages/obsidian` | ordinary | changing | shared | command-center | 2 |
 | `permissions` | `packages/permissions` | critical | changing | shared | command-center, workflows | 3 |
 | `reporting` | `packages/reporting` | ordinary | stable | database, shared | command-center, workflows | 2 |
 | `security` | `packages/security` | critical | changing | shared | command-center, integrations, workflows | 2 |
-| `shared` | `packages/shared` | sensitive | changing | — | agents, ai, command-center, database, integrations, permissions, reporting, security, workflows | 1 |
+| `shared` | `packages/shared` | sensitive | changing | — | agents, ai, command-center, database, graphify, integrations, obsidian, permissions, reporting, security, workflows | 1 |
 | `ui` | `packages/ui` | ordinary | temporary | — | command-center | 0 |
 | `workflows` | `packages/workflows` | critical | changing | agents, ai, database, permissions, reporting, security, shared | command-center | 3 |
 
@@ -30,7 +32,9 @@ graph LR
   command-center --> agents
   command-center --> ai
   command-center --> database
+  command-center --> graphify
   command-center --> integrations
+  command-center --> obsidian
   command-center --> permissions
   command-center --> reporting
   command-center --> security
@@ -38,8 +42,11 @@ graph LR
   command-center --> ui
   command-center --> workflows
   database --> shared
+  graphify --> ai
+  graphify --> shared
   integrations --> security
   integrations --> shared
+  obsidian --> shared
   permissions --> shared
   reporting --> database
   reporting --> shared
@@ -71,7 +78,9 @@ graph LR
 | `/executive` | page | `apps/command-center/app/executive/page.tsx` |
 | `/jarvis` | page | `apps/command-center/app/jarvis/page.tsx` |
 | `/knowledge` | page | `apps/command-center/app/knowledge/page.tsx` |
+| `/knowledge/[documentId]` | page | `apps/command-center/app/knowledge/[documentId]/page.tsx` |
 | `/login` | page | `apps/command-center/app/login/page.tsx` |
+| `/maintenance` | page | `apps/command-center/app/maintenance/page.tsx` |
 | `/objectives` | page | `apps/command-center/app/objectives/page.tsx` |
 | `/projects` | page | `apps/command-center/app/projects/page.tsx` |
 | `/proposals` | page | `apps/command-center/app/proposals/page.tsx` |
@@ -105,6 +114,7 @@ graph LR
 - `supabase/migrations/0009_prime_bootstrap.sql` — `98f08332e6ec`
 - `supabase/migrations/0010_critical_auditing.sql` — `b0da83b22025`
 - `supabase/migrations/0011_profile_identity.sql` — `02ae3b6922be`
+- `supabase/migrations/0012_document_version_insert.sql` — `335efd11c5cb`
 
 ## Security-critical files
 

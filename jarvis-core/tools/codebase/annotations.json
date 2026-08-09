@@ -283,6 +283,8 @@
       "@jarvis/agents",
       "@jarvis/reporting"
     ],
+    "@jarvis/graphify": ["@jarvis/shared", "@jarvis/ai"],
+    "@jarvis/obsidian": ["@jarvis/shared"],
     "@jarvis/command-center": [
       "@jarvis/shared",
       "@jarvis/permissions",
@@ -293,181 +295,23 @@
       "@jarvis/workflows",
       "@jarvis/reporting",
       "@jarvis/integrations",
-      "@jarvis/ui"
+      "@jarvis/ui",
+      "@jarvis/graphify",
+      "@jarvis/obsidian"
     ]
   },
   "events": {
-    "prime.claimed": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "prime.claim_denied": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "security_relevant"
-    },
-    "approval.requested": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.*": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "security_relevant"
-    },
-    "auth.sign_in": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "security_relevant"
-    },
-    "auth.sign_up": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "security_relevant"
-    },
-    "auth.sign_out": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "security_relevant"
-    },
-    "permission.denied": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "security_relevant"
-    },
-    "tool.executed": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "tool.failed": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "agent.run.started": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "agent.run.completed": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "agent.run.failed": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "agent.run.error": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "task.created": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "decision.recorded": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "objective.created": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "project.created": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "task.status_changed": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "operational"
-    },
-    "daily_brief.requested": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "telemetry"
-    },
-    "brief.generated": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "telemetry"
-    },
-    "brief.generated.cron": {
-      "consumers": [],
-      "guarantee": "best_effort",
-      "securityClass": "telemetry"
-    },
-    "approval.created": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.approved": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.rejected": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.modified": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.cancelled": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.expired": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.executed": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "approval.failed": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "membership.created": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "membership.role_changed": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "membership.revoked": {
-      "consumers": [],
-      "guarantee": "atomic",
-      "securityClass": "security_relevant"
-    },
-    "agent.authority_changed": {
+    "agent.actions_changed": {
       "consumers": [],
       "guarantee": "atomic",
       "securityClass": "security_relevant"
     },
     "agent.activated": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "agent.authority_changed": {
       "consumers": [],
       "guarantee": "atomic",
       "securityClass": "security_relevant"
@@ -482,10 +326,245 @@
       "guarantee": "atomic",
       "securityClass": "security_relevant"
     },
-    "agent.actions_changed": {
+    "agent.run.completed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "agent.run.error": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "agent.run.failed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "agent.run.started": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "approval.*": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "approval.approved": {
       "consumers": [],
       "guarantee": "atomic",
       "securityClass": "security_relevant"
+    },
+    "approval.cancelled": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.created": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.executed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.expired": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.failed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.modified": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.rejected": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "approval.requested": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "auth.sign_in": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "auth.sign_out": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "auth.sign_up": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "brief.generated": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    "brief.generated.cron": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    "client.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "daily_brief.requested": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    "decision.recorded": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "document.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "document.status_changed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "document.version_added": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "lead.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "lead.status_changed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "maintenance_plan.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "maintenance_plan.status_changed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "membership.created": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "membership.revoked": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "membership.role_changed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "objective.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "permission.denied": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "prime.claim_denied": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "prime.claimed": {
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    "project.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "proposal.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "proposal.status_changed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "task.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "task.status_changed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "tool.executed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "tool.failed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "website_audit.completed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "website_audit.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "website_project.created": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    "website_project.deployed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    "website_project.stage_changed": {
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
     }
   },
   "securityPathPatterns": [
