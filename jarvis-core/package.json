@@ -1,0 +1,40 @@
+{
+  "name": "jarvis-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JARVIS \u2014 private multi-business AI operating system (Phase 1)",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "agents"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/command-center",
+    "build": "npm run build -w apps/command-center",
+    "start": "npm run start -w apps/command-center",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w apps/command-center",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "codebase:generate": "node --no-warnings tools/codebase/generate.ts",
+    "codebase:verify": "node --no-warnings tools/codebase/verify.ts",
+    "graph": "tsx tools/graphify/index.ts",
+    "graph:health": "tsx tools/graphify/index.ts --health",
+    "vault:check": "tsx tools/vault/index.ts",
+    "vault:search": "tsx tools/vault/index.ts search",
+    "vault:list": "tsx tools/vault/index.ts list",
+    "knowledge:demo": "tsx tools/knowledge/demo.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.23.11",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0",
+    "vitest": "^3.0.0"
+  }
+}

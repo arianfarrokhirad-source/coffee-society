@@ -1,0 +1,1544 @@
+{
+  "version": "1",
+  "generatedAt": "2026-08-09T22:17:52.817Z",
+  "repositoryCommit": "c270066b508dca27523657b552d7b32117c2246d",
+  "_generated": [
+    "modules (except purpose/securitySensitivity/stability)",
+    "databaseMigrations",
+    "agents",
+    "businesses",
+    "routes",
+    "internalTools",
+    "tests",
+    "dependencyGraph",
+    "domainEvents (except consumers/guarantee/securityClass)",
+    "repositoryCommit"
+  ],
+  "modules": [
+    {
+      "name": "@jarvis/agents",
+      "path": "agents",
+      "exports": [
+        "AGENT_ROLE_CARDS",
+        "CONSTITUTION_VERSION",
+        "MASTER_CONSTITUTION",
+        "composePrompt"
+      ],
+      "dependsOn": [
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center",
+        "@jarvis/workflows"
+      ],
+      "tests": [],
+      "purpose": "Master constitution, versioned agent role cards, composable prompt assembly.",
+      "securitySensitivity": "sensitive",
+      "stability": "stable"
+    },
+    {
+      "name": "@jarvis/ai",
+      "path": "packages/ai",
+      "exports": [
+        "* ./batch",
+        "* ./chunking",
+        "* ./embeddings",
+        "* ./health",
+        "* ./pipelines/document",
+        "* ./pipelines/repository",
+        "* ./pricing",
+        "* ./retry",
+        "* ./router",
+        "* ./structured",
+        "* ./types",
+        "* ./usage",
+        "createAnthropicProvider",
+        "createGeminiProvider",
+        "createOpenAIProvider"
+      ],
+      "dependsOn": [
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center",
+        "@jarvis/graphify",
+        "@jarvis/workflows"
+      ],
+      "tests": [
+        "packages/ai/tests/batch.test.ts",
+        "packages/ai/tests/chunking.test.ts",
+        "packages/ai/tests/embeddings.test.ts",
+        "packages/ai/tests/gemini-embeddings.test.ts",
+        "packages/ai/tests/gemini.test.ts",
+        "packages/ai/tests/health.test.ts",
+        "packages/ai/tests/pipelines.test.ts",
+        "packages/ai/tests/retry.test.ts",
+        "packages/ai/tests/router.test.ts",
+        "packages/ai/tests/structured.test.ts",
+        "packages/ai/tests/usage.test.ts"
+      ],
+      "purpose": "Provider-independent capability router, Anthropic/OpenAI adapters, structured output validation.",
+      "securitySensitivity": "sensitive",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/command-center",
+      "path": "apps/command-center",
+      "exports": [],
+      "dependsOn": [
+        "@jarvis/agents",
+        "@jarvis/ai",
+        "@jarvis/database",
+        "@jarvis/graphify",
+        "@jarvis/integrations",
+        "@jarvis/obsidian",
+        "@jarvis/permissions",
+        "@jarvis/reporting",
+        "@jarvis/security",
+        "@jarvis/shared",
+        "@jarvis/ui",
+        "@jarvis/workflows"
+      ],
+      "consumers": [],
+      "tests": [
+        "apps/command-center/tests/action-audits.test.ts",
+        "apps/command-center/tests/action-crm.test.ts",
+        "apps/command-center/tests/action-delivery.test.ts",
+        "apps/command-center/tests/action-documents.test.ts",
+        "apps/command-center/tests/action-maintenance.test.ts",
+        "apps/command-center/tests/action-prime-claim.test.ts",
+        "apps/command-center/tests/action-proposals.test.ts",
+        "apps/command-center/tests/action-register.test.ts",
+        "apps/command-center/tests/action-signin.test.ts",
+        "apps/command-center/tests/approval-transitions.test.ts",
+        "apps/command-center/tests/auth-errors.test.ts",
+        "apps/command-center/tests/cron-auth.test.ts",
+        "apps/command-center/tests/knowledge-integration.test.ts",
+        "apps/command-center/tests/middleware-auth.test.ts",
+        "apps/command-center/tests/money.test.ts",
+        "apps/command-center/tests/prime-claim.test.ts",
+        "apps/command-center/tests/provider-wiring.test.ts",
+        "apps/command-center/tests/registration.test.ts",
+        "apps/command-center/tests/supabase-config.test.ts"
+      ],
+      "purpose": "Next.js App Router Command Centre: pages, server actions, API routes, auth middleware.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/database",
+      "path": "packages/database",
+      "exports": [
+        "* ./audit",
+        "* ./clients",
+        "* ./store",
+        "* ./types",
+        "createInMemoryStore",
+        "createSupabaseStore"
+      ],
+      "dependsOn": [
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center",
+        "@jarvis/reporting",
+        "@jarvis/workflows"
+      ],
+      "tests": [
+        "packages/database/tests/critical-audit.test.ts"
+      ],
+      "purpose": "Typed rows, client factories, JarvisStore seam with Supabase and in-memory implementations.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/graphify",
+      "path": "packages/graphify",
+      "exports": [
+        "* ./graph",
+        "* ./indexer",
+        "* ./report",
+        "* ./state",
+        "* ./types",
+        "* ./walk"
+      ],
+      "dependsOn": [
+        "@jarvis/ai",
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center"
+      ],
+      "tests": [
+        "packages/graphify/tests/graph.test.ts",
+        "packages/graphify/tests/indexer.test.ts",
+        "packages/graphify/tests/state.test.ts"
+      ],
+      "purpose": "UNANNOTATED — add to tools/codebase/annotations.json",
+      "securitySensitivity": "ordinary",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/integrations",
+      "path": "packages/integrations",
+      "exports": [
+        "* ./adapter",
+        "* ./registry"
+      ],
+      "dependsOn": [
+        "@jarvis/security",
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center"
+      ],
+      "tests": [
+        "packages/integrations/tests/integrations.test.ts"
+      ],
+      "purpose": "External adapter contract and seven disabled placeholder adapters.",
+      "securitySensitivity": "sensitive",
+      "stability": "stable"
+    },
+    {
+      "name": "@jarvis/obsidian",
+      "path": "packages/obsidian",
+      "exports": [
+        "* ./frontmatter",
+        "* ./fs",
+        "* ./guard",
+        "* ./templates",
+        "* ./types",
+        "* ./vault"
+      ],
+      "dependsOn": [
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center"
+      ],
+      "tests": [
+        "packages/obsidian/tests/frontmatter.test.ts",
+        "packages/obsidian/tests/vault.test.ts"
+      ],
+      "purpose": "UNANNOTATED — add to tools/codebase/annotations.json",
+      "securitySensitivity": "ordinary",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/permissions",
+      "path": "packages/permissions",
+      "exports": [
+        "* ./agent-scope",
+        "* ./authority",
+        "* ./policy"
+      ],
+      "dependsOn": [
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center",
+        "@jarvis/workflows"
+      ],
+      "tests": [
+        "packages/permissions/tests/agent-scope.test.ts",
+        "packages/permissions/tests/authority.test.ts",
+        "packages/permissions/tests/policy.test.ts"
+      ],
+      "purpose": "Authority comparison, deny-by-default action policy, agent scope enforcement. Pure, I/O-free.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/reporting",
+      "path": "packages/reporting",
+      "exports": [
+        "* ./brief",
+        "* ./notify"
+      ],
+      "dependsOn": [
+        "@jarvis/database",
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center",
+        "@jarvis/workflows"
+      ],
+      "tests": [
+        "packages/reporting/tests/brief.test.ts",
+        "packages/reporting/tests/notify.test.ts"
+      ],
+      "purpose": "Daily PRIME brief composition and notification delivery adapters.",
+      "securitySensitivity": "ordinary",
+      "stability": "stable"
+    },
+    {
+      "name": "@jarvis/security",
+      "path": "packages/security",
+      "exports": [
+        "* ./audit",
+        "* ./constant-time",
+        "* ./rate-limit",
+        "* ./redact",
+        "* ./safe-error",
+        "* ./webhooks"
+      ],
+      "dependsOn": [
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center",
+        "@jarvis/integrations",
+        "@jarvis/workflows"
+      ],
+      "tests": [
+        "packages/security/tests/constant-time.test.ts",
+        "packages/security/tests/security.test.ts"
+      ],
+      "purpose": "Secret redaction, audit event construction, rate limiting, safe errors, constant-time comparison, webhook verification.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/shared",
+      "path": "packages/shared",
+      "exports": [
+        "* ./approval-transitions",
+        "* ./constants",
+        "* ./result",
+        "* ./schemas"
+      ],
+      "dependsOn": [],
+      "consumers": [
+        "@jarvis/agents",
+        "@jarvis/ai",
+        "@jarvis/command-center",
+        "@jarvis/database",
+        "@jarvis/graphify",
+        "@jarvis/integrations",
+        "@jarvis/obsidian",
+        "@jarvis/permissions",
+        "@jarvis/reporting",
+        "@jarvis/security",
+        "@jarvis/workflows"
+      ],
+      "tests": [
+        "packages/shared/tests/schemas.test.ts"
+      ],
+      "purpose": "Business/agent codes, authority levels, Zod output schemas, Result type.",
+      "securitySensitivity": "sensitive",
+      "stability": "changing"
+    },
+    {
+      "name": "@jarvis/ui",
+      "path": "packages/ui",
+      "exports": [
+        "Badge",
+        "Card",
+        "EmptyState",
+        "StatTile"
+      ],
+      "dependsOn": [],
+      "consumers": [
+        "@jarvis/command-center"
+      ],
+      "tests": [],
+      "purpose": "Server-component-safe UI primitives: Card, Badge, EmptyState, StatTile.",
+      "securitySensitivity": "ordinary",
+      "stability": "temporary"
+    },
+    {
+      "name": "@jarvis/workflows",
+      "path": "packages/workflows",
+      "exports": [
+        "* ./classifier",
+        "* ./orchestrator",
+        "* ./tools"
+      ],
+      "dependsOn": [
+        "@jarvis/agents",
+        "@jarvis/ai",
+        "@jarvis/database",
+        "@jarvis/permissions",
+        "@jarvis/reporting",
+        "@jarvis/security",
+        "@jarvis/shared"
+      ],
+      "consumers": [
+        "@jarvis/command-center"
+      ],
+      "tests": [
+        "packages/workflows/tests/classifier.test.ts",
+        "packages/workflows/tests/orchestrator.test.ts",
+        "packages/workflows/tests/tools.test.ts"
+      ],
+      "purpose": "Request classifier, internal tool pipeline with enforcement, JVS-00 orchestrator.",
+      "securitySensitivity": "critical",
+      "stability": "changing"
+    }
+  ],
+  "securityCriticalFiles": [
+    {
+      "path": "packages/permissions/src/policy.ts",
+      "class": "critical",
+      "concern": "Action policy and approval gating; unknown actions must fail closed.",
+      "requiredTests": [
+        "packages/permissions/tests/policy.test.ts"
+      ]
+    },
+    {
+      "path": "packages/permissions/src/authority.ts",
+      "class": "critical",
+      "concern": "L0-L5 authority comparison.",
+      "requiredTests": [
+        "packages/permissions/tests/authority.test.ts"
+      ]
+    },
+    {
+      "path": "packages/permissions/src/agent-scope.ts",
+      "class": "critical",
+      "concern": "Agent containment: business scope, allowlist, denylist.",
+      "requiredTests": [
+        "packages/permissions/tests/agent-scope.test.ts"
+      ]
+    },
+    {
+      "path": "packages/workflows/src/tools.ts",
+      "class": "critical",
+      "concern": "Tool enforcement pipeline; restricted actions must become approvals.",
+      "requiredTests": [
+        "packages/workflows/tests/tools.test.ts"
+      ]
+    },
+    {
+      "path": "packages/workflows/src/orchestrator.ts",
+      "class": "critical",
+      "concern": "Acting-authority selection; agents must never inherit user authority.",
+      "requiredTests": [
+        "packages/workflows/tests/orchestrator.test.ts"
+      ]
+    },
+    {
+      "path": "packages/workflows/src/classifier.ts",
+      "class": "sensitive",
+      "concern": "External-action detection must precede any model involvement.",
+      "requiredTests": [
+        "packages/workflows/tests/classifier.test.ts"
+      ]
+    },
+    {
+      "path": "packages/security/src/audit.ts",
+      "class": "critical",
+      "concern": "Audit event construction with redaction before persistence.",
+      "requiredTests": [
+        "packages/database/tests/critical-audit.test.ts",
+        "packages/security/tests/security.test.ts"
+      ]
+    },
+    {
+      "path": "packages/security/src/redact.ts",
+      "class": "critical",
+      "concern": "Secret redaction for anything written to logs or audit.",
+      "requiredTests": [
+        "packages/database/tests/critical-audit.test.ts",
+        "packages/security/tests/security.test.ts"
+      ]
+    },
+    {
+      "path": "packages/security/src/constant-time.ts",
+      "class": "critical",
+      "concern": "Constant-time secret comparison without a length oracle.",
+      "requiredTests": [
+        "packages/security/tests/constant-time.test.ts"
+      ]
+    },
+    {
+      "path": "packages/security/src/safe-error.ts",
+      "class": "critical",
+      "concern": "User-facing error surface; only PublicError messages may reach the browser.",
+      "requiredTests": [
+        "packages/security/tests/security.test.ts"
+      ]
+    },
+    {
+      "path": "packages/security/src/rate-limit.ts",
+      "class": "sensitive",
+      "concern": "Rate limiting abstraction; in-memory implementation is temporary.",
+      "requiredTests": [
+        "packages/security/tests/security.test.ts"
+      ]
+    },
+    {
+      "path": "packages/security/src/webhooks.ts",
+      "class": "sensitive",
+      "concern": "HMAC verification interface; no replay protection yet.",
+      "requiredTests": [
+        "packages/security/tests/security.test.ts"
+      ]
+    },
+    {
+      "path": "packages/database/src/clients.ts",
+      "class": "critical",
+      "concern": "Service-role client construction; must never reach the browser.",
+      "requiredTests": [
+        "packages/workflows/tests/tools.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/prime-claim.ts",
+      "class": "critical",
+      "concern": "PRIME bootstrap token validation and rate-limit decisions.",
+      "requiredTests": [
+        "apps/command-center/tests/prime-claim.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/cron-auth.ts",
+      "class": "critical",
+      "concern": "Constant-time bearer check for the scheduled endpoint.",
+      "requiredTests": [
+        "apps/command-center/tests/cron-auth.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/auth.ts",
+      "class": "critical",
+      "concern": "Identity and membership resolution via the RLS-scoped client.",
+      "requiredTests": [
+        "apps/command-center/tests/prime-claim.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/jarvis.ts",
+      "class": "critical",
+      "concern": "Server-only service-role singletons; imports server-only.",
+      "requiredTests": [
+        "apps/command-center/tests/cron-auth.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/middleware.ts",
+      "class": "critical",
+      "concern": "Route gating. /login and /register must be public; everything else authenticated.",
+      "requiredTests": [
+        "apps/command-center/tests/cron-auth.test.ts",
+        "apps/command-center/tests/registration.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/app/actions/auth.ts",
+      "class": "critical",
+      "concern": "Sign-in/up/out and the PRIME claim flow.",
+      "requiredTests": [
+        "apps/command-center/tests/prime-claim.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/app/actions/approvals.ts",
+      "class": "critical",
+      "concern": "PRIME-only approval transitions, dual-enforced with RLS.",
+      "requiredTests": [
+        "packages/permissions/tests/policy.test.ts"
+      ]
+    },
+    {
+      "path": "supabase/migrations/0007_rls.sql",
+      "class": "critical",
+      "concern": "All RLS policies and helper functions.",
+      "requiredTests": [
+        "supabase/tests/rls_verification.sql"
+      ]
+    },
+    {
+      "path": "supabase/migrations/0009_prime_bootstrap.sql",
+      "class": "critical",
+      "concern": "Claim RPC, nonce table, single-PRIME trigger.",
+      "requiredTests": [
+        "supabase/tests/prime_bootstrap_verification.sql",
+        "supabase/tests/race_prime_claim.sh"
+      ]
+    },
+    {
+      "path": "supabase/migrations/0010_critical_auditing.sql",
+      "class": "critical",
+      "concern": "Atomic state+audit RPCs for every security-critical change; drops the direct write policies on approvals, memberships and agents.",
+      "requiredTests": [
+        "supabase/tests/critical_audit_verification.sql",
+        "supabase/tests/race_approval_transition.sh",
+        "supabase/tests/rls_verification.sql"
+      ]
+    },
+    {
+      "path": "packages/shared/src/approval-transitions.ts",
+      "class": "critical",
+      "concern": "TypeScript mirror of the SQL transition matrix and the request_origin enumeration; must stay in parity with the database.",
+      "requiredTests": [
+        "apps/command-center/tests/approval-transitions.test.ts",
+        "supabase/tests/transition_parity.sh"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/approval-transitions.ts",
+      "class": "critical",
+      "concern": "Maps RPC reason identifiers to user-facing messages; anything unrecognised must collapse to a generic string so database internals do not reach the browser.",
+      "requiredTests": [
+        "apps/command-center/tests/approval-transitions.test.ts"
+      ]
+    },
+    {
+      "path": "supabase/migrations/0011_profile_identity.sql",
+      "class": "critical",
+      "concern": "Signup trigger hardened to empty search_path; safe parsing of client-controlled metadata so an optional field can never abort account creation; identity validation on insert and self-update.",
+      "requiredTests": [
+        "supabase/tests/registration_verification.sql"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/registration.ts",
+      "class": "critical",
+      "concern": "Registration validation and the signup-metadata boundary: passwords never leave the action and nothing privilege-bearing is offered to the database trigger.",
+      "requiredTests": [
+        "apps/command-center/tests/registration.test.ts"
+      ]
+    },
+    {
+      "path": "apps/command-center/app/actions/register.ts",
+      "class": "critical",
+      "concern": "Account creation. Must create an auth user and a profile and nothing else — no membership, role, permission or PRIME.",
+      "requiredTests": [
+        "apps/command-center/tests/registration.test.ts",
+        "supabase/tests/registration_verification.sql"
+      ]
+    },
+    {
+      "path": "apps/command-center/lib/auth-errors.ts",
+      "class": "critical",
+      "concern": "Maps Supabase auth failures to safe messages; surfaces the enum code but never the raw message.",
+      "requiredTests": [
+        "apps/command-center/tests/auth-errors.test.ts"
+      ]
+    }
+  ],
+  "databaseMigrations": [
+    {
+      "path": "supabase/migrations/0001_extensions_enums.sql",
+      "sha256": "a77e9aca5c034252ebc4d1abf05b39576b0e6c823143f29d0e3538a7fbb7ad1b"
+    },
+    {
+      "path": "supabase/migrations/0002_core_identity.sql",
+      "sha256": "e870e0921e2c73d6643dff1cabd009742ba6b1210dadeaf4fe5a0cb6e83f8c52"
+    },
+    {
+      "path": "supabase/migrations/0003_agents.sql",
+      "sha256": "9dad951f6faf8bde6296b3856722330416d01f76357655cf575e03109d10d3c7"
+    },
+    {
+      "path": "supabase/migrations/0004_work.sql",
+      "sha256": "b6e1937b3664c4e5c42b708358a2ecd1c059745bbe62c6964b8079b32cab6547"
+    },
+    {
+      "path": "supabase/migrations/0005_documents.sql",
+      "sha256": "c0873612a8c65f2231e83034c7bdb4cc4081640df347a9d6600ce2afa92eedeb"
+    },
+    {
+      "path": "supabase/migrations/0006_runs_audit.sql",
+      "sha256": "08768084681f525b7496442f2523433deecd929358d13ef6e37e062e42237393"
+    },
+    {
+      "path": "supabase/migrations/0007_rls.sql",
+      "sha256": "364c33374ed2853e262df46ef774cb9534c193a9292317694789ca1871b3ef09"
+    },
+    {
+      "path": "supabase/migrations/0008_forge_pilot.sql",
+      "sha256": "1ca65ce1d3e9229f30dbb686a0a37b34d8393292cbfa4cb5692f793e46aeb317"
+    },
+    {
+      "path": "supabase/migrations/0009_prime_bootstrap.sql",
+      "sha256": "98f08332e6ec12afc96d690aa4cce1ec198486f0cac1b9b7fe35139da7feef74"
+    },
+    {
+      "path": "supabase/migrations/0010_critical_auditing.sql",
+      "sha256": "b0da83b22025cf5b89911cdf6a04c62c6f1e9eeab73afa902eec68d339aa15ac"
+    },
+    {
+      "path": "supabase/migrations/0011_profile_identity.sql",
+      "sha256": "02ae3b6922be2c06c03e987e6f1b1a52d57015f7e980cf9e5498efe495bbbc2a"
+    },
+    {
+      "path": "supabase/migrations/0012_document_version_insert.sql",
+      "sha256": "335efd11c5cb33531beb2277e19708eb9bd9289dd25944eeadab42d6fdadaf63"
+    }
+  ],
+  "agents": [
+    {
+      "code": "A00-GM",
+      "business": "A00"
+    },
+    {
+      "code": "A01-GM",
+      "business": "A01"
+    },
+    {
+      "code": "A02-GM",
+      "business": "A02"
+    },
+    {
+      "code": "A03-GM",
+      "business": "A03"
+    },
+    {
+      "code": "A04-CFO",
+      "business": "A04"
+    },
+    {
+      "code": "A05-CD",
+      "business": "A05"
+    },
+    {
+      "code": "A06-LD",
+      "business": "A06"
+    },
+    {
+      "code": "A07-AD",
+      "business": "A07"
+    },
+    {
+      "code": "A08-RSV",
+      "business": "A08"
+    },
+    {
+      "code": "JVS-00",
+      "business": null
+    }
+  ],
+  "businesses": [
+    {
+      "code": "A00",
+      "name": "ATLAS"
+    },
+    {
+      "code": "A01",
+      "name": "FORGE"
+    },
+    {
+      "code": "A02",
+      "name": "SIGNAL"
+    },
+    {
+      "code": "A03",
+      "name": "VECTOR"
+    },
+    {
+      "code": "A04",
+      "name": "ORACLE"
+    },
+    {
+      "code": "A05",
+      "name": "TEMPO"
+    },
+    {
+      "code": "A06",
+      "name": "ECHO"
+    },
+    {
+      "code": "A07",
+      "name": "ACADEMY"
+    },
+    {
+      "code": "A08",
+      "name": "VOID"
+    }
+  ],
+  "routes": [
+    {
+      "route": "/",
+      "path": "apps/command-center/app/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/agents",
+      "path": "apps/command-center/app/agents/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/api/cron/daily-brief",
+      "path": "apps/command-center/app/api/cron/daily-brief/route.ts",
+      "kind": "api"
+    },
+    {
+      "route": "/api/jarvis/chat",
+      "path": "apps/command-center/app/api/jarvis/chat/route.ts",
+      "kind": "api"
+    },
+    {
+      "route": "/approvals",
+      "path": "apps/command-center/app/approvals/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/audits",
+      "path": "apps/command-center/app/audits/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/businesses",
+      "path": "apps/command-center/app/businesses/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/businesses/[businessId]",
+      "path": "apps/command-center/app/businesses/[businessId]/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/clients",
+      "path": "apps/command-center/app/clients/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/decisions",
+      "path": "apps/command-center/app/decisions/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/delivery",
+      "path": "apps/command-center/app/delivery/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/executive",
+      "path": "apps/command-center/app/executive/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/jarvis",
+      "path": "apps/command-center/app/jarvis/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/knowledge",
+      "path": "apps/command-center/app/knowledge/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/knowledge/[documentId]",
+      "path": "apps/command-center/app/knowledge/[documentId]/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/login",
+      "path": "apps/command-center/app/login/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/maintenance",
+      "path": "apps/command-center/app/maintenance/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/objectives",
+      "path": "apps/command-center/app/objectives/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/projects",
+      "path": "apps/command-center/app/projects/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/proposals",
+      "path": "apps/command-center/app/proposals/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/register",
+      "path": "apps/command-center/app/register/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/reports",
+      "path": "apps/command-center/app/reports/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/settings",
+      "path": "apps/command-center/app/settings/page.tsx",
+      "kind": "page"
+    },
+    {
+      "route": "/tasks",
+      "path": "apps/command-center/app/tasks/page.tsx",
+      "kind": "page"
+    }
+  ],
+  "internalTools": [
+    {
+      "name": "createProject",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "createTask",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "generateDailyBrief",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "getBusinessSummary",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "getOpenTasks",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "getPendingApprovals",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "recordDecision",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "requestApproval",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "searchDocuments",
+      "path": "packages/workflows/src/tools.ts"
+    },
+    {
+      "name": "updateTask",
+      "path": "packages/workflows/src/tools.ts"
+    }
+  ],
+  "tests": [
+    "apps/command-center/tests/action-audits.test.ts",
+    "apps/command-center/tests/action-crm.test.ts",
+    "apps/command-center/tests/action-delivery.test.ts",
+    "apps/command-center/tests/action-documents.test.ts",
+    "apps/command-center/tests/action-maintenance.test.ts",
+    "apps/command-center/tests/action-prime-claim.test.ts",
+    "apps/command-center/tests/action-proposals.test.ts",
+    "apps/command-center/tests/action-register.test.ts",
+    "apps/command-center/tests/action-signin.test.ts",
+    "apps/command-center/tests/approval-transitions.test.ts",
+    "apps/command-center/tests/auth-errors.test.ts",
+    "apps/command-center/tests/cron-auth.test.ts",
+    "apps/command-center/tests/knowledge-integration.test.ts",
+    "apps/command-center/tests/middleware-auth.test.ts",
+    "apps/command-center/tests/money.test.ts",
+    "apps/command-center/tests/prime-claim.test.ts",
+    "apps/command-center/tests/provider-wiring.test.ts",
+    "apps/command-center/tests/registration.test.ts",
+    "apps/command-center/tests/supabase-config.test.ts",
+    "packages/ai/tests/batch.test.ts",
+    "packages/ai/tests/chunking.test.ts",
+    "packages/ai/tests/embeddings.test.ts",
+    "packages/ai/tests/gemini-embeddings.test.ts",
+    "packages/ai/tests/gemini.test.ts",
+    "packages/ai/tests/health.test.ts",
+    "packages/ai/tests/pipelines.test.ts",
+    "packages/ai/tests/retry.test.ts",
+    "packages/ai/tests/router.test.ts",
+    "packages/ai/tests/structured.test.ts",
+    "packages/ai/tests/usage.test.ts",
+    "packages/database/tests/critical-audit.test.ts",
+    "packages/graphify/tests/graph.test.ts",
+    "packages/graphify/tests/indexer.test.ts",
+    "packages/graphify/tests/state.test.ts",
+    "packages/integrations/tests/integrations.test.ts",
+    "packages/obsidian/tests/frontmatter.test.ts",
+    "packages/obsidian/tests/vault.test.ts",
+    "packages/permissions/tests/agent-scope.test.ts",
+    "packages/permissions/tests/authority.test.ts",
+    "packages/permissions/tests/policy.test.ts",
+    "packages/reporting/tests/brief.test.ts",
+    "packages/reporting/tests/notify.test.ts",
+    "packages/security/tests/constant-time.test.ts",
+    "packages/security/tests/security.test.ts",
+    "packages/shared/tests/schemas.test.ts",
+    "packages/workflows/tests/classifier.test.ts",
+    "packages/workflows/tests/orchestrator.test.ts",
+    "packages/workflows/tests/tools.test.ts",
+    "supabase/tests/critical_audit_verification.sql",
+    "supabase/tests/local_harness.sql",
+    "supabase/tests/prime_bootstrap_verification.sql",
+    "supabase/tests/race_approval_transition.sh",
+    "supabase/tests/race_prime_claim.sh",
+    "supabase/tests/registration_verification.sql",
+    "supabase/tests/rls_verification.sql",
+    "supabase/tests/transition_parity.sh"
+  ],
+  "dependencyGraph": [
+    {
+      "from": "@jarvis/agents",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/ai",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/agents"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/ai"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/database"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/graphify"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/integrations"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/obsidian"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/permissions"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/reporting"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/security"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/ui"
+    },
+    {
+      "from": "@jarvis/command-center",
+      "to": "@jarvis/workflows"
+    },
+    {
+      "from": "@jarvis/database",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/graphify",
+      "to": "@jarvis/ai"
+    },
+    {
+      "from": "@jarvis/graphify",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/integrations",
+      "to": "@jarvis/security"
+    },
+    {
+      "from": "@jarvis/integrations",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/obsidian",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/permissions",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/reporting",
+      "to": "@jarvis/database"
+    },
+    {
+      "from": "@jarvis/reporting",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/security",
+      "to": "@jarvis/shared"
+    },
+    {
+      "from": "@jarvis/workflows",
+      "to": "@jarvis/agents"
+    },
+    {
+      "from": "@jarvis/workflows",
+      "to": "@jarvis/ai"
+    },
+    {
+      "from": "@jarvis/workflows",
+      "to": "@jarvis/database"
+    },
+    {
+      "from": "@jarvis/workflows",
+      "to": "@jarvis/permissions"
+    },
+    {
+      "from": "@jarvis/workflows",
+      "to": "@jarvis/reporting"
+    },
+    {
+      "from": "@jarvis/workflows",
+      "to": "@jarvis/security"
+    },
+    {
+      "from": "@jarvis/workflows",
+      "to": "@jarvis/shared"
+    }
+  ],
+  "canonicalSources": {
+    "implementation": "source code",
+    "databaseStructure": "supabase/migrations/",
+    "databaseTypes": "packages/database/src/types.ts (hand-written; codegen in hardening commit 7)",
+    "authorizationPolicy": "packages/permissions/src/policy.ts (DB-canonical in hardening commit 5)",
+    "businessAgentDefinitions": "supabase/seed/seed.sql (duplicated in shared/src/constants.ts and database/src/store-memory.ts until hardening commit 6)",
+    "projectState": "docs/codebase/CURRENT_STATE.md",
+    "decisions": "docs/codebase/decisions/ (JEKS slice 3)"
+  },
+  "domainEvents": [
+    {
+      "name": "agent.actions_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.activated",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.authority_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.deactivated",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.financial_authority_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "agent.run.completed",
+      "kind": "system_event",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "agent.run.error",
+      "kind": "audit_action",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "agent.run.failed",
+      "kind": "system_event",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "agent.run.started",
+      "kind": "audit_action",
+      "producers": [
+        "packages/workflows/src/orchestrator.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "approval.created",
+      "kind": "audit_action",
+      "producers": [
+        "packages/database/src/store-memory.ts",
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "approval.expired",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "approval.requested",
+      "kind": "system_event",
+      "producers": [
+        "packages/database/src/store-memory.ts",
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "auth.sign_out",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/auth.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "auth.sign_up",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/register.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "brief.generated",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/brief.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    {
+      "name": "brief.generated.cron",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/api/cron/daily-brief/route.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    {
+      "name": "client.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "daily_brief.requested",
+      "kind": "system_event",
+      "producers": [
+        "packages/reporting/src/brief.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "telemetry"
+    },
+    {
+      "name": "decision.recorded",
+      "kind": "system_event",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "document.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/documents.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "document.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/documents.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "document.version_added",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/documents.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "lead.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "lead.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/audits.ts",
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "maintenance_plan.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/maintenance.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "maintenance_plan.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/maintenance.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "membership.created",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "membership.revoked",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "membership.role_changed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0010_critical_auditing.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "objective.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "prime.claim_denied",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/auth.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "prime.claimed",
+      "kind": "audit_action",
+      "producers": [
+        "supabase/migrations/0007_rls.sql",
+        "supabase/migrations/0009_prime_bootstrap.sql"
+      ],
+      "consumers": [],
+      "guarantee": "atomic",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "project.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "proposal.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "proposal.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/crm.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "task.created",
+      "kind": "system_event",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "task.status_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/work.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "tool.executed",
+      "kind": "audit_action",
+      "producers": [
+        "packages/workflows/src/tools.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_audit.completed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/audits.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_audit.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/audits.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_project.created",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/delivery.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    },
+    {
+      "name": "website_project.deployed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/delivery.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "security_relevant"
+    },
+    {
+      "name": "website_project.stage_changed",
+      "kind": "audit_action",
+      "producers": [
+        "apps/command-center/app/actions/delivery.ts"
+      ],
+      "consumers": [],
+      "guarantee": "best_effort",
+      "securityClass": "operational"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@jarvis/command-center",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@jarvis/agents": "*",
+    "@jarvis/ai": "*",
+    "@jarvis/database": "*",
+    "@jarvis/graphify": "*",
+    "@jarvis/integrations": "*",
+    "@jarvis/obsidian": "*",
+    "@jarvis/permissions": "*",
+    "@jarvis/reporting": "*",
+    "@jarvis/security": "*",
+    "@jarvis/shared": "*",
+    "@jarvis/ui": "*",
+    "@jarvis/workflows": "*",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.47.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17"
+  }
+}
