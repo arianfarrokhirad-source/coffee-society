@@ -21,7 +21,9 @@ const nextConfig: NextConfig = {
     '@jarvis/agents',
     '@jarvis/ai',
     '@jarvis/database',
+    '@jarvis/graphify',
     '@jarvis/integrations',
+    '@jarvis/obsidian',
     '@jarvis/permissions',
     '@jarvis/reporting',
     '@jarvis/security',
@@ -29,6 +31,14 @@ const nextConfig: NextConfig = {
     '@jarvis/ui',
     '@jarvis/workflows',
   ],
+  // The vault is read from disk at request time, and Next.js only ships
+  // files it can see being imported. Markdown opened through a computed
+  // path is invisible to that analysis, so without this the /knowledge
+  // page would work locally and find an empty vault in production —
+  // the failure mode that looks like a data problem and is a build one.
+  outputFileTracingIncludes: {
+    '/knowledge': ['../../farrokhirad-vault/**/*.md'],
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
